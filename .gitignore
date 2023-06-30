@@ -3,3 +3,4 @@
 tmp
 .terraform.lock.hcl
 .air.toml
+guacamole
