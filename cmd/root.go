@@ -1,6 +1,3 @@
-/*
-Copyright © 2023 Julien Jourdain julienj@padok.fr
-*/
 package cmd
 
 import (
@@ -12,13 +9,14 @@ import (
 )
 
 var cfgFile string
+var CodebasePath string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "iacsast",
+	Use:   "guacamole",
 	Short: "Manage your IaC code quality as ease.",
 	Long: `
-	Iacsast is a tool to help you manage your IaC code quality based on Padok guidelines.
+	Guacamole is a tool to help you manage your IaC code quality based on Padok guidelines.
 	If you want to know more about Padok's IaC guidelines, please visit https://github.com/padok-team/docs-terraform-guidelines
 	`,
 	// Uncomment the following line if your bare application
@@ -42,11 +40,14 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.iacsast.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.guacamole.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVarP(&CodebasePath, "path", "p", "", "path to your IaC codebase")
+
+	viper.BindPFlag("path", rootCmd.Flags().Lookup("path"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -59,10 +60,10 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".iacsast" (without extension).
+		// Search config in home directory with name ".guacamole" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".iacsast")
+		viper.SetConfigName(".guacamole")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

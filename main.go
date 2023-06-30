@@ -1,7 +1,7 @@
 package main
 
 import (
-	"iacsast/cmd"
+	"guacamole/cmd"
 )
 
 func main() {
