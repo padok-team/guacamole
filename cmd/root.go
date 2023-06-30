@@ -9,7 +9,8 @@ import (
 )
 
 var cfgFile string
-var CodebasePath string
+var codebasePath string
+var terraformBin string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -45,9 +46,11 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.PersistentFlags().StringVarP(&CodebasePath, "path", "p", "", "path to your IaC codebase")
+	rootCmd.PersistentFlags().StringVarP(&codebasePath, "codebase-path", "p", "", "path to your IaC codebase")
+	rootCmd.PersistentFlags().StringVarP(&terraformBin, "terraform-bin", "b", "", "binary for terraform")
 
-	viper.BindPFlag("path", rootCmd.Flags().Lookup("path"))
+	viper.BindPFlag("codebase-path", rootCmd.PersistentFlags().Lookup("codebase-path"))
+	viper.BindPFlag("terraform-bin", rootCmd.PersistentFlags().Lookup("terraform-bin"))
 }
 
 // initConfig reads in config file and ENV variables if set.

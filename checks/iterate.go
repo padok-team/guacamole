@@ -1,35 +1,103 @@
 package checks
 
 import (
+	"context"
+	"fmt"
+	"guacamole/data"
 	"log"
+	"regexp"
+	"strconv"
 
-	"github.com/hashicorp/hcl/v2/hclsimple"
+	tfexec "github.com/hashicorp/terraform-exec/tfexec"
 	"github.com/spf13/viper"
 )
 
-type Config struct {
-	IOMode  string        `hcl:"io_mode"`
-	Service ServiceConfig `hcl:"service,block"`
+type Change struct {
+	Actions []string `json:"actions"`
 }
 
-type ServiceConfig struct {
-	Protocol   string          `hcl:"protocol,label"`
-	Type       string          `hcl:"type,label"`
-	ListenAddr string          `hcl:"listen_addr"`
-	Processes  []ProcessConfig `hcl:"process,block"`
+type ResourceChange struct {
+	Address      string `json:"address"`
+	Mode         string `json:"mode"`
+	Type         string `json:"type"`
+	Name         string `json:"name"`
+	Index        string `json:"index"`
+	ProviderName string `json:"provider_name"`
+	Change       Change `json:"change"`
 }
 
-type ProcessConfig struct {
-	Type    string   `hcl:"type,label"`
-	Command []string `hcl:"command"`
+type ResourceChanges struct {
+	ResourceChanges []ResourceChange `json:"resource_changes"`
 }
 
-func Iterate() {
-	var config Config
-	path := viper.GetString("path")
-	err := hclsimple.DecodeFile(path, nil, &config)
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %s", err)
+func Iterate() data.Check {
+	name := "Iterate"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
+	status := "✅"
+
+	codebasePath := viper.GetString("codebase-path")
+	terraformBin := viper.GetString("terraform-bin")
+	if terraformBin == "" {
+		terraformBin = "terraform"
 	}
-	log.Printf("Configuration is %#v", config)
+
+	tf, err := tfexec.NewTerraform(codebasePath, terraformBin)
+	if err != nil {
+		log.Fatalf("Failed to create Terraform instance: %s", err)
+	}
+
+	err = tf.Init(context.TODO(), tfexec.Upgrade(true))
+	if err != nil {
+		log.Fatalf("Failed to initialize Terraform: %s", err)
+	}
+
+	// Create Terraform plan
+	_, err = tf.Plan(context.Background(), tfexec.Out("/tmp/plan.json"))
+	if err != nil {
+		log.Fatalf("Failed to create plan: %s", err)
+	}
+
+	// Create JSON plan
+	jsonPlan, err := tf.ShowPlanFile(context.Background(), "/tmp/plan.json")
+	if err != nil {
+		log.Fatalf("Failed to create JSON plan: %s", err)
+	}
+
+	var index int
+	var indexString string
+	var checkedResources []string
+
+	// Analyze plan for resources with count > 1
+	for _, rc := range jsonPlan.ResourceChanges {
+		// Parse the module address to find numbers inside of []
+		regexpIndexMatch := regexp.MustCompile(`\[(.*?)\]`).FindStringSubmatch(rc.Address)
+		if len(regexpIndexMatch) > 0 {
+			indexString = regexpIndexMatch[1]
+		}
+
+		// Ignore error in case of a string into the brackets, meaning that the resource was not created with count
+		index, _ = strconv.Atoi(indexString)
+
+		if index > 0 {
+			// Check if the resource was already checked
+			alreadyChecked := false
+			for _, checkedResource := range checkedResources {
+				if checkedResource == rc.ModuleAddress {
+					alreadyChecked = true
+					break
+				}
+			}
+			if !alreadyChecked {
+				status = "❌"
+				checkedResources = append(checkedResources, rc.ModuleAddress)
+				fmt.Printf("WARNING: Resource %s has count more than 1\n", rc.Address)
+			}
+		}
+	}
+
+	return data.Check{
+		Name:              name,
+		RelatedGuidelines: relatedGuidelines,
+		Status:            status,
+	}
 }

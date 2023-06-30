@@ -16,6 +16,7 @@ func Checks() {
 	listOfChecks := []func() data.Check{
 		ProviderInModule,
 		Naming,
+		Iterate,
 	}
 	totalChecks := len(listOfChecks)
 	// Displaying the results
