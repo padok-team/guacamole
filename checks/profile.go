@@ -29,7 +29,6 @@ func Profile() data.Check {
 
 	layers, _ := getLayers()
 	for _, layer := range layers {
-		fmt.Println("Initializing layer", layer.FullPath)
 		err := layer.Init()
 		if err != nil {
 			panic(err)
