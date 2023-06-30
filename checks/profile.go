@@ -3,6 +3,7 @@ package checks
 import (
 	"bufio"
 	"fmt"
+	"guacamole/data"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,8 +18,15 @@ type Layer struct {
 	RefreshTime int
 }
 
-func RunProfileCheck() {
-	layers, _ := GetLayers()
+func Profile() data.Check {
+	checkStatus := data.Check{
+		Name:              "Layers' refresh time",
+		Status:            "✅",
+		RelatedGuidelines: "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/wysiwg_patterns.md",
+	}
+	layerInError := []string{}
+
+	layers, _ := getLayers()
 	for _, layer := range layers {
 		fmt.Println("Initializing layer", layer.FullPath)
 		err := layer.Init()
@@ -29,10 +37,19 @@ func RunProfileCheck() {
 		if err != nil {
 			panic(err)
 		}
+		if layer.RefreshTime > 120 {
+			layerInError = append(layerInError, layer.Name)
+		}
 	}
+
+	if len(layerInError) > 0 {
+		checkStatus.Status = "❌"
+	}
+
+	return checkStatus
 }
 
-func GetLayers() ([]Layer, error) {
+func getLayers() ([]Layer, error) {
 	root := viper.GetString("codebase-path") // Root directory to start browsing from
 	layers := []Layer{}
 

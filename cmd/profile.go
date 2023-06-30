@@ -4,7 +4,6 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"guacamole/checks"
 
 	"github.com/spf13/cobra"
@@ -15,8 +14,7 @@ var profileCmd = &cobra.Command{
 	Use:   "profile",
 	Short: "Estimate the refresh time of your codebase",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("profile called")
-		checks.RunProfileCheck()
+		checks.Profile()
 	},
 }
 
