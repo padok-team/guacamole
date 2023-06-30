@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 
 	"github.com/spf13/viper"
 )
@@ -60,7 +61,10 @@ func getLayers() ([]Layer, error) {
 
 		// Check if the current path is a file and its name matches "terragrunt.hcl"
 		if !info.IsDir() && info.Name() == "terragrunt.hcl" {
-			layers = append(layers, Layer{Name: path[len(root) : len(path)-len(info.Name())-1], FullPath: path[:len(path)-len(info.Name())-1]})
+			// exclude the files which are in the .terragrunt-cache directory
+			if !regexp.MustCompile(`.terragrunt-cache`).MatchString(path) {
+				layers = append(layers, Layer{Name: path[len(root) : len(path)-len(info.Name())-1], FullPath: path[:len(path)-len(info.Name())-1]})
+			}
 		}
 
 		return nil
