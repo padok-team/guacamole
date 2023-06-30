@@ -10,7 +10,8 @@ import (
 
 func ProviderInModule() data.Check {
 	name := "No provider in module"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules"
+	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules"
+	relatedGuidelines := "http://bitly.ws/K5Wa"
 	// Find recusively all the modules in the current directory
 	modules, err := helpers.GetModules()
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"guacamole/data"
 	"guacamole/helpers"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -11,7 +12,8 @@ import (
 
 func Naming() data.Check {
 	name := "Stuttering in the naming of the resources"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
+	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
+	relatedGuidelines := "http://bitly.ws/K5Wm"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -25,8 +27,8 @@ func Naming() data.Check {
 		}
 		//Check if the name of the resource is not a duplicate of its type
 		for _, resource := range moduleConf.ManagedResources {
-			if strings.Contains(resource.Type, resource.Name) {
-				namesInError = append(namesInError, resource.Pos.Filename+" --> "+resource.MapKey())
+			if strings.Contains(resource.Name, resource.Type) {
+				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
 			}
 		}
 

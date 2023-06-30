@@ -35,10 +35,11 @@ func Checks() {
 		if len(c.Errors) > 0 {
 			for _, err := range c.Errors {
 				t.AppendRows([]table.Row{
-					{"", "", "", err},
+					{"", "", "", "", err},
 				})
 			}
 		}
+		t.AppendSeparator()
 	}
 	score := strconv.Itoa(totalChecksOk*100/totalChecks) + "%"
 	if score == "100%" {

@@ -2,7 +2,6 @@ package checks
 
 import (
 	"context"
-	"fmt"
 	"guacamole/data"
 	"log"
 	"regexp"
@@ -32,9 +31,10 @@ type ResourceChanges struct {
 
 func Iterate() data.Check {
 	name := "Don't use count to create multiple resources"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
+	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
+	relatedGuidelines := "http://bitly.ws/K5WA"
 	status := "✅"
-	codebasePath := viper.GetString("codebase-path") + "layers/alerting"
+	codebasePath := viper.GetString("codebase-path") + "layers/random-pets/test"
 
 	tf, err := tfexec.NewTerraform(codebasePath, "terragrunt")
 	if err != nil {
@@ -85,7 +85,7 @@ func Iterate() data.Check {
 			if !alreadyChecked {
 				status = "❌"
 				checkedResources = append(checkedResources, rc.ModuleAddress)
-				fmt.Printf("WARNING: Resource %s has count more than 1\n", rc.Address)
+				// fmt.Printf("WARNING: Resource %s has count more than 1\n", rc.Address)
 			}
 		}
 	}

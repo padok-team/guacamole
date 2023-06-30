@@ -21,9 +21,10 @@ type Layer struct {
 
 func Profile() data.Check {
 	checkResult := data.Check{
-		Name:              "Layers' refresh time",
-		Status:            "✅",
-		RelatedGuidelines: "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/wysiwg_patterns.md",
+		Name:   "Layers' refresh time",
+		Status: "✅",
+		// RelatedGuidelines: "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/wysiwg_patterns.md",
+		RelatedGuidelines: "http://bitly.ws/K5VV",
 		Errors:            []string{},
 	}
 
