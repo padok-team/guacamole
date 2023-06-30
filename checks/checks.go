@@ -17,6 +17,7 @@ func Checks() {
 		ProviderInModule,
 		Naming,
 		Iterate,
+		Profile,
 	}
 	totalChecks := len(listOfChecks)
 	// Displaying the results
