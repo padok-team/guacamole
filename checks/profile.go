@@ -20,12 +20,12 @@ type Layer struct {
 }
 
 func Profile() data.Check {
-	checkStatus := data.Check{
+	checkResult := data.Check{
 		Name:              "Layers' refresh time",
 		Status:            "✅",
 		RelatedGuidelines: "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/wysiwg_patterns.md",
+		Errors:            []string{},
 	}
-	layerInError := []string{}
 
 	layers, _ := getLayers()
 	for _, layer := range layers {
@@ -39,15 +39,15 @@ func Profile() data.Check {
 			panic(err)
 		}
 		if layer.RefreshTime > 120 {
-			layerInError = append(layerInError, layer.Name)
+			checkResult.Errors = append(checkResult.Errors, layer.Name)
 		}
 	}
 
-	if len(layerInError) > 0 {
-		checkStatus.Status = "❌"
+	if len(checkResult.Errors) > 0 {
+		checkResult.Status = "❌"
 	}
 
-	return checkStatus
+	return checkResult
 }
 
 func getLayers() ([]Layer, error) {
