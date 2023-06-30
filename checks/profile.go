@@ -87,6 +87,10 @@ func getLayers() ([]Layer, error) {
 
 // Function to initialize a layer (terragrunt)
 func (l *Layer) Init() error {
+	if l.InitStatus {
+		return nil
+	}
+
 	// Create the terragrunt command
 	terragruntCmd := exec.Command("terragrunt", "init")
 
