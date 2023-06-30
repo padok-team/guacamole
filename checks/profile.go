@@ -63,7 +63,16 @@ func getLayers() ([]Layer, error) {
 		if !info.IsDir() && info.Name() == "terragrunt.hcl" {
 			// exclude the files which are in the .terragrunt-cache directory
 			if !regexp.MustCompile(`.terragrunt-cache`).MatchString(path) {
-				layers = append(layers, Layer{Name: path[len(root) : len(path)-len(info.Name())-1], FullPath: path[:len(path)-len(info.Name())-1]})
+				layer := Layer{
+					Name:     path[len(root) : len(path)-len(info.Name())-1],
+					FullPath: path[:len(path)-len(info.Name())-1],
+				}
+
+				if _, err := os.Stat(path[:len(path)-len(info.Name())-1] + "/.terragrunt-cache"); !os.IsNotExist(err) {
+					layer.InitStatus = true
+				}
+
+				layers = append(layers, layer)
 			}
 		}
 
