@@ -23,7 +23,7 @@ func Checks() {
 	// Displaying the results
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"#", "Check", "Status", "Related guidelines"})
+	t.AppendHeader(table.Row{"#", "Check", "Status", "Related guideline", "Errors"})
 	for i, check := range listOfChecks {
 		c := check()
 		if c.Status == "✅" {
@@ -32,6 +32,13 @@ func Checks() {
 		t.AppendRows([]table.Row{
 			{i + 1, c.Name, c.Status, c.RelatedGuidelines},
 		})
+		if len(c.Errors) > 0 {
+			for _, err := range c.Errors {
+				t.AppendRows([]table.Row{
+					{"", "", "", err},
+				})
+			}
+		}
 	}
 	score := strconv.Itoa(totalChecksOk*100/totalChecks) + "%"
 	if score == "100%" {
