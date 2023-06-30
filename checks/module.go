@@ -3,22 +3,21 @@ package checks
 import (
 	"fmt"
 	"guacamole/data"
-	"os"
-	"path/filepath"
+	"guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
 func ProviderInModule() data.Check {
 	name := "No provider in module"
-	relatedGuidelines := "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/donts.md#using-provider-block-in-modules"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules"
 	fmt.Println("Checking none prescence provider in module...")
 	// Find recusively all the modules in the current directory
-	modules, err := getModules()
+	modules, err := helpers.GetModules()
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	modulesInError := []Module{}
+	modulesInError := []data.Module{}
 	// For each module, check if the provider is defined
 	for _, module := range modules {
 		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
@@ -45,25 +44,4 @@ func ProviderInModule() data.Check {
 		RelatedGuidelines: relatedGuidelines,
 		Status:            "✅",
 	}
-}
-
-type Module struct {
-	Name     string
-	FullPath string
-}
-
-func getModules() ([]Module, error) {
-	root := "/Users/benjaminsanvoisin/dev/wizzair/aws-network/modules"
-	modules := []Module{}
-	//Get all subdirectories in root path
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			fmt.Println("Error:", err)
-		}
-		if info.IsDir() && path != root {
-			modules = append(modules, Module{Name: info.Name(), FullPath: path})
-		}
-		return nil
-	})
-	return modules, err
 }

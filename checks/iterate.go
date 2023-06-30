@@ -34,8 +34,7 @@ func Iterate() data.Check {
 	name := "Don't use count to create multiple resources"
 	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
 	status := "✅"
-
-	codebasePath := viper.GetString("codebase-path")
+	codebasePath := viper.GetString("codebase-path") + "layers/alerting"
 
 	tf, err := tfexec.NewTerraform(codebasePath, "terragrunt")
 	if err != nil {

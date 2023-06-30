@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"guacamole/data"
+	"guacamole/helpers"
 	"strings"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -10,9 +11,9 @@ import (
 
 func Naming() data.Check {
 	name := "Stuttering in the naming of the resources"
-	relatedGuidelines := "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/terraform_naming.md"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
 	fmt.Println("Checking naming convention...")
-	modules, err := getModules()
+	modules, err := helpers.GetModules()
 	if err != nil {
 		fmt.Println("Error:", err)
 	}

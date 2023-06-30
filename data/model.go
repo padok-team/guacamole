@@ -5,3 +5,8 @@ type Check struct {
 	Status            string
 	RelatedGuidelines string
 }
+
+type Module struct {
+	Name     string
+	FullPath string
+}
