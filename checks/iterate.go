@@ -31,17 +31,13 @@ type ResourceChanges struct {
 }
 
 func Iterate() data.Check {
-	name := "Iterate"
+	name := "Don't use count to create multiple resources"
 	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
 	status := "✅"
 
 	codebasePath := viper.GetString("codebase-path")
-	terraformBin := viper.GetString("terraform-bin")
-	if terraformBin == "" {
-		terraformBin = "terraform"
-	}
 
-	tf, err := tfexec.NewTerraform(codebasePath, terraformBin)
+	tf, err := tfexec.NewTerraform(codebasePath, "terragrunt")
 	if err != nil {
 		log.Fatalf("Failed to create Terraform instance: %s", err)
 	}
