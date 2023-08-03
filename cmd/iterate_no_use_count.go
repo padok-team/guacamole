@@ -4,30 +4,22 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"guacamole/checks"
 
 	"github.com/spf13/cobra"
 )
 
-// iterateCmd represents the iterate command
-var iterateCmd = &cobra.Command{
-	Use:   "iterate",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+// iterateNoUseCountCmd represents the iterate command
+var iterateNoUseCountCmd = &cobra.Command{
+	Use:   "iterate-no-use-count",
+	Short: "Check if you are using count to create multiple resources",
 	Run: func(cmd *cobra.Command, args []string) {
-		checks.Iterate()
-		fmt.Println("iterate called")
+		checks.IterateNoUseCount()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(iterateCmd)
+	rootCmd.AddCommand(iterateNoUseCountCmd)
 
 	// Here you will define your flags and configuration settings.
 

@@ -17,8 +17,8 @@ var rootCmd = &cobra.Command{
 	Use:   "guacamole",
 	Short: "Manage your IaC code quality as ease.",
 	Long: `
-	Guacamole is a tool to help you manage your IaC code quality based on Padok guidelines.
-	If you want to know more about Padok's IaC guidelines, please visit https://github.com/padok-team/docs-terraform-guidelines
+Guacamole is a tool to help you manage your IaC code quality based on Padok guidelines.
+If you want to know more about Padok's IaC guidelines, please visit https://padok-team.github.io/docs-terraform-guidelines/
 	`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"guacamole/data"
 	"guacamole/helpers"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	tfexec "github.com/hashicorp/terraform-exec/tfexec"
 )
@@ -31,24 +31,32 @@ type ResourceChanges struct {
 	ResourceChanges []ResourceChange `json:"resource_changes"`
 }
 
-func Iterate() data.Check {
+func IterateNoUseCount() (data.Check, error) {
 	name := "Don't use count to create multiple resources"
 	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
 	relatedGuidelines := "http://bitly.ws/K5WA"
 	status := "✅"
+	errors := []string{}
 
 	layers, err := helpers.GetLayers()
 	if err != nil {
-		log.Fatalf("Failed to get layers: %s", err)
+		return data.Check{}, err
 	}
 
 	// Create a channel to receive the results
-	results := make(chan string)
-	errs := make(chan error)
+	results, checkErrors, errs := make(chan string), make(chan string), make(chan error)
+	defer close(results)
+	defer close(checkErrors)
+	defer close(errs)
+
+	wg := new(sync.WaitGroup)
+	wg.Add(len(layers))
 
 	for _, layer := range layers {
-		go checkLayer(layer, results, errs)
+		go checkLayer(layer, results, checkErrors, errs, wg)
 	}
+
+	wg.Wait() // Here we wait for all the goroutines to finish
 
 	// Wait for all goroutines to finish
 	for i := 0; i < len(layers); i++ {
@@ -57,43 +65,50 @@ func Iterate() data.Check {
 			if result == "❌" {
 				status = "❌"
 			}
+		case checkError := <-checkErrors:
+			errors = append(errors, checkError)
+
 		case err := <-errs:
-			log.Fatalf("Failed to check layer: %s", err)
+			return data.Check{}, fmt.Errorf("error while checking layer: %w", err)
 		}
 	}
 
-	close(results)
-	close(errs)
-
-	return data.Check{
+	data := data.Check{
 		Name:              name,
 		RelatedGuidelines: relatedGuidelines,
 		Status:            status,
+		Errors:            errors,
 	}
+
+	return data, nil
 }
 
-func checkLayer(layer data.Layer, results chan string, errs chan error) {
+func checkLayer(layer data.Layer, result, checkError chan string, errs chan error, wg *sync.WaitGroup) {
 	status := "✅"
 
 	dirPath := "/tmp/" + strings.ReplaceAll(layer.Name, "/", "_")
 
+	fmt.Println("Checking layer", layer.Name)
 	tf, err := tfexec.NewTerraform(layer.FullPath, "terragrunt")
 	if err != nil {
 		errs <- fmt.Errorf("failed to create Terraform instance: %w", err)
 	}
 
+	fmt.Println("Initializing Terraform for layer", layer.Name)
 	err = tf.Init(context.TODO(), tfexec.Upgrade(true))
 	if err != nil {
 		errs <- fmt.Errorf("failed to initialize Terraform: %w", err)
 	}
 
 	// Create Terraform plan
+	fmt.Println("Creating plan for layer", layer.Name)
 	_, err = tf.Plan(context.Background(), tfexec.Out(dirPath+"_plan.json"))
 	if err != nil {
 		errs <- fmt.Errorf("failed to create plan: %w", err)
 	}
 
 	// Create JSON plan
+	fmt.Println("Showing JSON plan for layer", layer.Name)
 	jsonPlan, err := tf.ShowPlanFile(context.Background(), dirPath+"_plan.json")
 	if err != nil {
 		errs <- fmt.Errorf("failed to create JSON plan: %w", err)
@@ -104,6 +119,7 @@ func checkLayer(layer data.Layer, results chan string, errs chan error) {
 	var checkedResources []string
 
 	// Analyze plan for resources with count > 1
+	fmt.Println("Analyzing plan for layer", layer.Name)
 	for _, rc := range jsonPlan.ResourceChanges {
 		// Parse the module address to find numbers inside of []
 		regexpIndexMatch := regexp.MustCompile(`\[(.*?)\]`).FindStringSubmatch(rc.Address)
@@ -126,9 +142,12 @@ func checkLayer(layer data.Layer, results chan string, errs chan error) {
 			if !alreadyChecked {
 				status = "❌"
 				checkedResources = append(checkedResources, rc.ModuleAddress)
-				// fmt.Printf("WARNING: Resource %s has count more than 1\n", rc.Address)
+				fmt.Println("Resource", rc.Address, "in layer", layer.Name, "has count more than 1")
+				checkError <- fmt.Sprintf("Resource %s in layer %s has count more than 1\n", rc.Address, layer.Name)
 			}
 		}
 	}
-	results <- status
+	fmt.Println("Done checking layer", layer.Name)
+	result <- status
+	wg.Done()
 }
