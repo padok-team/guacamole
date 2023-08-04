@@ -5,7 +5,7 @@ import (
 	"guacamole/helpers"
 )
 
-func Profile() data.Check {
+func RefreshTime() data.Check {
 	checkResult := data.Check{
 		Name:   "Layers' refresh time",
 		Status: "✅",

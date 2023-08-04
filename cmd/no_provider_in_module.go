@@ -12,14 +12,8 @@ import (
 
 // moduleCmd represents the module command
 var moduleCmd = &cobra.Command{
-	Use:   "module",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "provider-in-module",
+	Short: "Check if you are using a provider in a module",
 	Run: func(cmd *cobra.Command, args []string) {
 		checks.ProviderInModule()
 		fmt.Println("module called")

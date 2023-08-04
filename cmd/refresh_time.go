@@ -9,17 +9,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// profileCmd represents the profile command
-var profileCmd = &cobra.Command{
-	Use:   "profile",
-	Short: "Estimate the refresh time of your codebase",
+// refreshTimeCmd represents the profile command
+var refreshTimeCmd = &cobra.Command{
+	Use:   "refresh-time",
+	Short: "Estimate the refresh time of the layers of your codebase",
 	Run: func(cmd *cobra.Command, args []string) {
-		checks.Profile()
+		checks.RefreshTime()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(profileCmd)
+	rootCmd.AddCommand(refreshTimeCmd)
 
 	// Here you will define your flags and configuration settings.
 
