@@ -4,32 +4,32 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"guacamole/checks"
+	"guacamole/helpers"
 
 	"github.com/spf13/cobra"
 )
 
-// moduleCmd represents the module command
-var moduleCmd = &cobra.Command{
-	Use:   "provider-in-module",
-	Short: "Check if you are using a provider in a module",
+// plan represents the run command
+var static = &cobra.Command{
+	Use:   "static",
+	Short: "Run static code checks",
 	Run: func(cmd *cobra.Command, args []string) {
-		checks.ProviderInModule()
-		fmt.Println("module called")
+		checkResults := checks.StaticChecks()
+		helpers.RenderTable(checkResults)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(moduleCmd)
+	rootCmd.AddCommand(static)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// moduleCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// runCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// moduleCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// runCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

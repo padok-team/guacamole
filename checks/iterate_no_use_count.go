@@ -1,16 +1,11 @@
 package checks
 
 import (
-	"context"
 	"fmt"
 	"guacamole/data"
-	"guacamole/helpers"
 	"regexp"
 	"strconv"
-	"strings"
 	"sync"
-
-	tfexec "github.com/hashicorp/terraform-exec/tfexec"
 )
 
 type Change struct {
@@ -31,45 +26,33 @@ type ResourceChanges struct {
 	ResourceChanges []ResourceChange `json:"resource_changes"`
 }
 
-func IterateNoUseCount() (data.Check, error) {
+func IterateNoUseCount(layers []data.Layer) (data.Check, error) {
 	name := "Don't use count to create multiple resources"
 	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
 	relatedGuidelines := "http://bitly.ws/K5WA"
 	status := "✅"
 	errors := []string{}
 
-	layers, err := helpers.GetLayers()
-	if err != nil {
-		return data.Check{}, err
-	}
-
-	// Create a channel to receive the results
-	results, checkErrors, errs := make(chan string), make(chan string), make(chan error)
-	defer close(results)
-	defer close(checkErrors)
-	defer close(errs)
+	c := make(chan []string, len(layers))
 
 	wg := new(sync.WaitGroup)
 	wg.Add(len(layers))
 
-	for _, layer := range layers {
-		go checkLayer(layer, results, checkErrors, errs, wg)
+	for i := range layers {
+		go func(layer *data.Layer) {
+			defer wg.Done()
+			c <- checkLayer(layer)
+		}(&layers[i])
 	}
 
-	wg.Wait() // Here we wait for all the goroutines to finish
+	wg.Wait()
 
 	// Wait for all goroutines to finish
 	for i := 0; i < len(layers); i++ {
-		select {
-		case result := <-results:
-			if result == "❌" {
-				status = "❌"
-			}
-		case checkError := <-checkErrors:
-			errors = append(errors, checkError)
-
-		case err := <-errs:
-			return data.Check{}, fmt.Errorf("error while checking layer: %w", err)
+		checkErrors := <-c
+		if len(checkErrors) > 0 {
+			status = "❌"
+			errors = append(errors, checkErrors...)
 		}
 	}
 
@@ -83,44 +66,13 @@ func IterateNoUseCount() (data.Check, error) {
 	return data, nil
 }
 
-func checkLayer(layer data.Layer, result, checkError chan string, errs chan error, wg *sync.WaitGroup) {
-	status := "✅"
-
-	dirPath := "/tmp/" + strings.ReplaceAll(layer.Name, "/", "_")
-
-	fmt.Println("Checking layer", layer.Name)
-	tf, err := tfexec.NewTerraform(layer.FullPath, "terragrunt")
-	if err != nil {
-		errs <- fmt.Errorf("failed to create Terraform instance: %w", err)
-	}
-
-	fmt.Println("Initializing Terraform for layer", layer.Name)
-	err = tf.Init(context.TODO(), tfexec.Upgrade(true))
-	if err != nil {
-		errs <- fmt.Errorf("failed to initialize Terraform: %w", err)
-	}
-
-	// Create Terraform plan
-	fmt.Println("Creating plan for layer", layer.Name)
-	_, err = tf.Plan(context.Background(), tfexec.Out(dirPath+"_plan.json"))
-	if err != nil {
-		errs <- fmt.Errorf("failed to create plan: %w", err)
-	}
-
-	// Create JSON plan
-	fmt.Println("Showing JSON plan for layer", layer.Name)
-	jsonPlan, err := tf.ShowPlanFile(context.Background(), dirPath+"_plan.json")
-	if err != nil {
-		errs <- fmt.Errorf("failed to create JSON plan: %w", err)
-	}
-
+func checkLayer(layer *data.Layer) []string {
 	var index int
 	var indexString string
-	var checkedResources []string
+	var checkedResources, checkErrors []string
 
 	// Analyze plan for resources with count > 1
-	fmt.Println("Analyzing plan for layer", layer.Name)
-	for _, rc := range jsonPlan.ResourceChanges {
+	for _, rc := range layer.Plan.ResourceChanges {
 		// Parse the module address to find numbers inside of []
 		regexpIndexMatch := regexp.MustCompile(`\[(.*?)\]`).FindStringSubmatch(rc.Address)
 		if len(regexpIndexMatch) > 0 {
@@ -140,14 +92,10 @@ func checkLayer(layer data.Layer, result, checkError chan string, errs chan erro
 				}
 			}
 			if !alreadyChecked {
-				status = "❌"
 				checkedResources = append(checkedResources, rc.ModuleAddress)
-				fmt.Println("Resource", rc.Address, "in layer", layer.Name, "has count more than 1")
-				checkError <- fmt.Sprintf("Resource %s in layer %s has count more than 1\n", rc.Address, layer.Name)
+				checkErrors = append(checkErrors, fmt.Sprintf("%s --> %s", layer.Name, rc.Address))
 			}
 		}
 	}
-	fmt.Println("Done checking layer", layer.Name)
-	result <- status
-	wg.Done()
+	return checkErrors
 }

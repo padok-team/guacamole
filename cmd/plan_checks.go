@@ -5,21 +5,27 @@ package cmd
 
 import (
 	"guacamole/checks"
+	"guacamole/helpers"
 
 	"github.com/spf13/cobra"
 )
 
-// checkAllCmd represents the run command
-var checkAllCmd = &cobra.Command{
-	Use:   "check-all",
-	Short: "Run all checks",
+// plan represents the run command
+var plan = &cobra.Command{
+	Use:   "plan",
+	Short: "Run plan-related checks",
 	Run: func(cmd *cobra.Command, args []string) {
-		checks.CheckAll()
+		layers, err := helpers.ComputeLayers(true)
+		if err != nil {
+			panic(err)
+		}
+		checkResults := checks.PlanChecks(layers)
+		helpers.RenderTable(checkResults)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(checkAllCmd)
+	rootCmd.AddCommand(plan)
 
 	// Here you will define your flags and configuration settings.
 

@@ -2,10 +2,9 @@ package checks
 
 import (
 	"guacamole/data"
-	"guacamole/helpers"
 )
 
-func RefreshTime() data.Check {
+func RefreshTime(layers []data.Layer) (data.Check, error) {
 	checkResult := data.Check{
 		Name:   "Layers' refresh time",
 		Status: "✅",
@@ -14,18 +13,22 @@ func RefreshTime() data.Check {
 		Errors:            []string{},
 	}
 
-	layers, _ := helpers.GetLayers()
 	for _, layer := range layers {
-		err := layer.Init()
-		if err != nil {
-			panic(err)
-		}
-		err = layer.GetRefreshTime()
-		if err != nil {
-			panic(err)
-		}
-		if layer.RefreshTime > 120 {
-			checkResult.Errors = append(checkResult.Errors, layer.Name)
+		refreshTime := 0
+		if layer.State.Values == nil {
+			continue
+		} else {
+			// TODO: check if this way of counting resources counts all nested resources
+			// refreshTime := len(layer.State.Values.RootModule.Resources)
+			for _, resource := range layer.Plan.ResourceChanges {
+				if !resource.Change.Actions.Create() {
+					refreshTime++
+				}
+			}
+
+			if refreshTime > 120 {
+				checkResult.Errors = append(checkResult.Errors, layer.Name)
+			}
 		}
 	}
 
@@ -33,5 +36,5 @@ func RefreshTime() data.Check {
 		checkResult.Status = "❌"
 	}
 
-	return checkResult
+	return checkResult, nil
 }

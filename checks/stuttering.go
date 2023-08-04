@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func NoStuttering() (data.Check, error) {
+func Stuttering() (data.Check, error) {
 	name := "Stuttering in the naming of the resources"
 	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
 	relatedGuidelines := "http://bitly.ws/K5Wm"
