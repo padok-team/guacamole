@@ -4,6 +4,8 @@ go 1.20
 
 require (
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20230808231734-f15f31bf62b3
+	github.com/davecgh/go-spew v1.1.1
+	github.com/fatih/color v1.15.0
 	github.com/hashicorp/terraform-exec v0.18.1
 	github.com/hashicorp/terraform-json v0.17.1
 	github.com/jedib0t/go-pretty/v6 v6.4.6
@@ -21,6 +23,8 @@ require (
 	github.com/hashicorp/hcl/v2 v2.17.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
