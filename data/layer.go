@@ -1,82 +1,78 @@
 package data
 
 import (
-	"bufio"
-	"os"
-	"os/exec"
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/hashicorp/terraform-exec/tfexec"
+	tfjson "github.com/hashicorp/terraform-json"
 )
 
 type Layer struct {
-	Name        string
-	FullPath    string
-	InitStatus  bool
-	RefreshTime int
+	Name       string
+	FullPath   string
+	InitStatus bool
+	Plan       *tfjson.Plan
+	State      *tfjson.State
 }
 
-// Function to initialize a layer (terragrunt)
-func (l *Layer) Init() error {
-	if l.InitStatus {
-		return nil
+func (l *Layer) Init() {
+	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
+	if err != nil {
+		fmt.Printf("failed to create Terraform instance: %s", err)
 	}
 
-	// Create the terragrunt command
-	terragruntCmd := exec.Command("terragrunt", "init")
-
-	// Set the command's working directory to the Terragrunt configuration directory
-	terragruntCmd.Dir = l.FullPath
-
-	// Redirect the command's output to the standard output
-	terragruntCmd.Stdout = os.Stdout
-	terragruntCmd.Stderr = os.Stderr
-
-	// Run the terragrunt command
-	err := terragruntCmd.Run()
+	err = tf.Init(context.Background(), tfexec.Upgrade(true))
 	if err != nil {
-		return err
+		fmt.Printf("failed to initialize Terraform: %s", err)
 	}
 
 	l.InitStatus = true
-
-	return nil
 }
 
-// Function to generate a layer plan using terragrunt
-func (l *Layer) GetRefreshTime() error {
-	// Create the terragrunt command
-	terragruntCmd := exec.Command("terragrunt", "state", "list")
+func (l *Layer) ComputePlan() {
+	dirPath := "/tmp/" + strings.ReplaceAll(l.Name, "/", "_")
 
-	// Set the command's working directory to the Terragrunt configuration directory
-	terragruntCmd.Dir = l.FullPath
-
-	// Create a pipe to capture the stdout
-	stdoutPipe, err := terragruntCmd.StdoutPipe()
+	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
 	if err != nil {
-		return err
+		fmt.Printf("failed to create Terraform instance: %s", err)
 	}
 
-	// Start the terragrunt command
-	err = terragruntCmd.Start()
+	if !l.InitStatus {
+		l.Init()
+	}
+
+	// Create Terraform plan
+	_, err = tf.Plan(context.Background(), tfexec.Out(dirPath+"_plan.json"))
 	if err != nil {
-		return err
+		fmt.Printf("failed to create plan: %s", err)
 	}
 
-	// Create a scanner to read from the stdout pipe
-	scanner := bufio.NewScanner(stdoutPipe)
-	lineCount := 0
-
-	// Read each line from the stdout and count the number of lines
-	for scanner.Scan() {
-		lineCount++
-	}
-
-	// Wait for the command to finish
-	err = terragruntCmd.Wait()
+	// Create JSON plan
+	jsonPlan, err := tf.ShowPlanFile(context.Background(), dirPath+"_plan.json")
 	if err != nil {
-		return err
+		fmt.Printf("failed to create JSON plan: %s", err)
 	}
 
-	// Set the refresh time to the number of lines
-	l.RefreshTime = lineCount
+	l.Plan = jsonPlan
+}
 
-	return nil
+func (l *Layer) ComputeState() {
+	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
+	if err != nil {
+		fmt.Printf("failed to create Terraform instance: %s", err)
+	}
+
+	if !l.InitStatus {
+		l.Init()
+	}
+
+	// Create Terraform state file
+	state, err := tf.Show(context.TODO())
+	if err != nil {
+		fmt.Printf("failed to create state: %s", err)
+	}
+
+	l.State = state
 }
