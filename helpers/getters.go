@@ -6,12 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/viper"
 )
 
 func GetModules() ([]data.Module, error) {
-	codebasePath := viper.GetString("codebase-path") + "modules/"
+	codebasePath := filepath.Join(viper.GetString("codebase-path"), "modules")
 	modules := []data.Module{}
 	//Get all subdirectories in root path
 	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
@@ -39,7 +40,11 @@ func GetLayers() ([]data.Layer, error) {
 		if !info.IsDir() && info.Name() == "terragrunt.hcl" {
 			// exclude the files which are in the .terragrunt-cache directory
 			if !regexp.MustCompile(`.terragrunt-cache`).MatchString(path) {
-				layers = append(layers, data.Layer{Name: path[len(root)-1 : len(path)-len(info.Name())-1], FullPath: path[:len(path)-len(info.Name())-1]})
+				// TODO: for name, remove first and last element, for fullpath remove only last element
+				splitPath := strings.Split(path, "/")
+				fullPath := strings.Join(splitPath[:len(splitPath)-1], "/")
+				name := strings.Join(splitPath[1:len(splitPath)-1], "/")
+				layers = append(layers, data.Layer{Name: name, FullPath: fullPath})
 			}
 		}
 

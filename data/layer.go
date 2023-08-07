@@ -23,7 +23,7 @@ func (l *Layer) Init() {
 		fmt.Printf("failed to create Terraform instance: %s", err)
 	}
 
-	err = tf.Init(context.Background(), tfexec.Upgrade(true))
+	err = tf.Init(context.Background())
 	if err != nil {
 		fmt.Printf("failed to initialize Terraform: %s", err)
 	}
