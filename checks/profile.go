@@ -86,18 +86,21 @@ func Profile(layers []data.Layer, verbose bool) {
 		}
 
 		sort.Strings(resourceTypeKeys)
-		c = color.New(color.FgWhite).Add(color.Bold)
 
 		if len(resourceTypes) > 0 {
 			totalLayerResources := 0
 			for _, r := range resourceTypes {
 				totalLayerResources += r.Total
 			}
-
 			resourceTypeCountStr := "[" + strconv.Itoa(totalLayerResources) + "]"
-			c.Printf("%*s %s\n", padding, resourceTypeCountStr, "Resources")
+			resourceTypeDistinctCountStr := "[" + strconv.Itoa(len(resourceTypes)) + "]"
+			c = color.New(color.FgWhite).Add(color.Bold)
+			c.Printf("%*s %s of %s different types\n", padding, resourceTypeCountStr, "Resources", resourceTypeDistinctCountStr)
 			for _, k := range resourceTypeKeys {
-				c = color.New(color.FgWhite).Add(color.Bold)
+				c = color.New(color.FgWhite)
+				if verbose {
+					c.Add(color.Bold)
+				}
 				totalStr := " "
 				if len(resourceTypes[k].Instances) > 1 {
 					totalStr = "[" + strconv.Itoa(resourceTypes[k].Total) + "]"
@@ -126,12 +129,15 @@ func Profile(layers []data.Layer, verbose bool) {
 			for _, r := range resourceTypes {
 				totalLayerDatsources += r.Total
 			}
-
 			datasourceTypeCountStr := "[" + strconv.Itoa(totalLayerDatsources) + "]"
+			datasourceTypeDistinctCountStr := "[" + strconv.Itoa(len(datasourceTypes)) + "]"
 			c = color.New(color.FgWhite).Add(color.Bold)
-			c.Printf("%*s %s\n", padding, datasourceTypeCountStr, "Datasources")
+			c.Printf("%*s %s of %s different types\n", padding, datasourceTypeCountStr, "Datasources", datasourceTypeDistinctCountStr)
 			for _, k := range datasourceTypeKeys {
-				c = color.New(color.FgWhite).Add(color.Bold)
+				c = color.New(color.FgWhite)
+				if verbose {
+					c.Add(color.Bold)
+				}
 				totalStr := " "
 				if len(datasourceTypes[k].Instances) > 1 {
 					totalStr = "[" + strconv.Itoa(datasourceTypes[k].Total) + "]"
