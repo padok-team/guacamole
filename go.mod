@@ -11,6 +11,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
+	golang.org/x/exp v0.0.0-20230810033253-352e893a4cad
 )
 
 require (

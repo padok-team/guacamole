@@ -16,7 +16,7 @@ var profile = &cobra.Command{
 	Use:   "profile",
 	Short: "Display informations about resources and datasources contained in the codebase",
 	Run: func(cmd *cobra.Command, args []string) {
-		layers, err := helpers.ComputeLayers(true)
+		layers, err := helpers.ComputeLayers(false)
 		if err != nil {
 			panic(err)
 		}
