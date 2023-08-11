@@ -4,3 +4,5 @@ tmp
 .terraform.lock.hcl
 .air.toml
 guacamole
+# Ignore modifications on examples
+example/

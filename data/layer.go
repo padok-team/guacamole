@@ -3,6 +3,8 @@ package data
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
@@ -12,23 +14,9 @@ import (
 type Layer struct {
 	Name       string
 	FullPath   string
-	InitStatus bool
 	Plan       *tfjson.Plan
 	State      *tfjson.State
-}
-
-func (l *Layer) Init() {
-	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
-	if err != nil {
-		fmt.Printf("failed to create Terraform instance: %s", err)
-	}
-
-	err = tf.Init(context.Background())
-	if err != nil {
-		fmt.Printf("failed to initialize Terraform: %s", err)
-	}
-
-	l.InitStatus = true
+	RootModule Module
 }
 
 func (l *Layer) ComputePlan() {
@@ -39,8 +27,12 @@ func (l *Layer) ComputePlan() {
 		fmt.Printf("failed to create Terraform instance: %s", err)
 	}
 
-	if !l.InitStatus {
-		l.Init()
+	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
+	if os.IsNotExist(err) {
+		err = tf.Init(context.Background())
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Create Terraform plan
@@ -64,8 +56,12 @@ func (l *Layer) ComputeState() {
 		fmt.Printf("failed to create Terraform instance: %s", err)
 	}
 
-	if !l.InitStatus {
-		l.Init()
+	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
+	if os.IsNotExist(err) {
+		err = tf.Init(context.Background())
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Create Terraform state file
@@ -75,4 +71,18 @@ func (l *Layer) ComputeState() {
 	}
 
 	l.State = state
+}
+
+func (layer *Layer) BuildRootModule() {
+	if layer.State == nil {
+		layer.ComputeState()
+	}
+
+	layer.RootModule = Module{
+		Address:     "root",
+		ObjectTypes: []ObjectType{},
+		Children:    []Module{},
+	}
+
+	layer.RootModule.buildModule(layer.State.Values.RootModule)
 }

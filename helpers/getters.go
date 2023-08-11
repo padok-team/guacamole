@@ -11,16 +11,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-func GetModules() ([]data.Module, error) {
+func GetModules() ([]data.TerraformModule, error) {
 	codebasePath := filepath.Join(viper.GetString("codebase-path"), "modules")
-	modules := []data.Module{}
+	modules := []data.TerraformModule{}
 	//Get all subdirectories in root path
 	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to get subdirectories: %w", err)
 		}
 		if info.IsDir() && path != codebasePath {
-			modules = append(modules, data.Module{Name: info.Name(), FullPath: path})
+			modules = append(modules, data.TerraformModule{Name: info.Name(), FullPath: path})
 		}
 		return nil
 	})
