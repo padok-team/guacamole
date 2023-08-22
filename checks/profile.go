@@ -3,6 +3,8 @@ package checks
 import (
 	"fmt"
 	"guacamole/data"
+	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -10,9 +12,6 @@ import (
 	"github.com/fatih/color"
 	"golang.org/x/exp/slices"
 )
-
-// TODO: Add total for codebase
-// TODO: Move the data into the layer object
 
 func Profile(layers []data.Layer, verbose bool) {
 	wg := new(sync.WaitGroup)
@@ -35,11 +34,19 @@ func Profile(layers []data.Layer, verbose bool) {
 		padding += 3
 	}
 
-	codebaseTotal := data.Size{
+	codebaseSizes := data.Size{
 		Resources:   0,
 		Datasources: 0,
 		Modules:     0,
 	}
+
+	codebaseStats := data.Stats{
+		DistinctResourceTypes:   make(map[string]int),
+		DistinctDatasourceTypes: make(map[string]int),
+		Depth:                   0,
+	}
+
+	var biggestChild data.Module
 
 	// Display a legend
 	fmt.Println("Legend:")
@@ -50,45 +57,150 @@ func Profile(layers []data.Layer, verbose bool) {
 	c = color.New(color.FgGreen).Add(color.Bold)
 	c.Println("  Resource")
 	c = color.New(color.FgWhite)
-	c.Printf("  Instance\n\n")
+	c.Printf("  Datasource / Resource name\n\n")
 	c = color.New(color.FgYellow).Add(color.Bold)
 	c.Println("Profiling by layer:")
 	for _, layer := range layers {
 		fmt.Println(strings.Repeat("-", 50))
 		c = color.New(color.FgYellow).Add(color.Bold)
 		c.Printf("%s\n", layer.Name)
-		printTree(layer.RootModule, padding, verbose)
 
-		codebaseTotal.Resources += layer.RootModule.CumulatedSize.Resources
-		codebaseTotal.Datasources += layer.RootModule.CumulatedSize.Datasources
-		codebaseTotal.Modules += layer.RootModule.CumulatedSize.Modules
+		if layer.RootModule.CumulatedSize.Resources+layer.RootModule.CumulatedSize.Datasources > 0 {
+			printTree(layer.RootModule, padding, verbose)
+		} else {
+			fmt.Println("  -- Layer has no object in state --")
+		}
+
+		codebaseSizes.Resources += layer.RootModule.CumulatedSize.Resources
+		codebaseSizes.Datasources += layer.RootModule.CumulatedSize.Datasources
+		codebaseSizes.Modules += layer.RootModule.CumulatedSize.Modules
+
+		stats := layer.RootModule.ComputeStats()
+
+		// Update codebase stats
+		for k, v := range stats.DistinctDatasourceTypes {
+			codebaseStats.DistinctDatasourceTypes[k] += v
+		}
+		for k, v := range stats.DistinctResourceTypes {
+			codebaseStats.DistinctResourceTypes[k] += v
+		}
+
+		for _, c := range layer.RootModule.Children {
+			if c.CumulatedSize.Resources+c.CumulatedSize.Datasources > biggestChild.CumulatedSize.Resources+biggestChild.CumulatedSize.Datasources {
+				biggestChild = c
+			}
+		}
+
+		codebaseStats.Depth = int(math.Max(float64(codebaseStats.Depth), float64(stats.Depth)))
+
+		dKeys := make([]string, 0, len(stats.DistinctDatasourceTypes))
+		for k := range stats.DistinctDatasourceTypes {
+			dKeys = append(dKeys, k)
+		}
+
+		sort.SliceStable(dKeys, func(i, j int) bool {
+			if stats.DistinctDatasourceTypes[dKeys[i]] == stats.DistinctDatasourceTypes[dKeys[j]] {
+				return strings.Compare(dKeys[i], dKeys[j]) < 0
+			}
+			return stats.DistinctDatasourceTypes[dKeys[i]] > stats.DistinctDatasourceTypes[dKeys[j]]
+		})
+
+		rKeys := make([]string, 0, len(stats.DistinctResourceTypes))
+		for k := range stats.DistinctResourceTypes {
+			rKeys = append(rKeys, k)
+		}
+
+		sort.SliceStable(rKeys, func(i, j int) bool {
+			if stats.DistinctResourceTypes[rKeys[i]] == stats.DistinctResourceTypes[rKeys[j]] {
+				return strings.Compare(rKeys[i], rKeys[j]) < 0
+			}
+			return stats.DistinctResourceTypes[rKeys[i]] > stats.DistinctResourceTypes[rKeys[j]]
+		})
 
 		c = color.New(color.FgWhite).Add(color.Bold)
-		c.Printf("\nTotal:\n")
+		c.Printf("\nStats:\n")
 		c = color.New(color.FgBlue).Add(color.Bold)
-		c.Printf("  %-12s %d\n", "Datasources:", layer.RootModule.CumulatedSize.Datasources)
+		c.Printf("  %s %d\n", "Datasources:", layer.RootModule.CumulatedSize.Datasources)
+		c = color.New(color.FgBlue)
+		c.Printf("    %-14s %d\n", "Distinct types:", len(stats.DistinctDatasourceTypes))
+		if verbose {
+			for _, k := range dKeys {
+				c.Printf("      [%d] %s\n", stats.DistinctDatasourceTypes[k], k)
+			}
+		}
 		c = color.New(color.FgGreen).Add(color.Bold)
-		c.Printf("  %-12s %d\n", "Resources:", layer.RootModule.CumulatedSize.Resources)
-		c := color.New(color.FgWhite).Add(color.Bold)
-		c.Printf("  %-12s %d\n", "Modules:", layer.RootModule.CumulatedSize.Modules)
+		c.Printf("  %s %d\n", "Resources:", layer.RootModule.CumulatedSize.Resources)
+		c = color.New(color.FgGreen)
+		c.Printf("    %-14s %d\n", "Distinct types:", len(stats.DistinctResourceTypes))
+		if verbose {
+			for _, k := range rKeys {
+				c.Printf("      [%d] %s\n", stats.DistinctResourceTypes[k], k)
+			}
+		}
+		c = color.New(color.FgWhite).Add(color.Bold)
+		c.Printf("  %s\n", "Modules:")
+		c = color.New(color.FgWhite)
+		c.Printf("    %-12s %d\n", "Module depth:", stats.Depth)
 	}
+
+	dgKeys := make([]string, 0, len(codebaseStats.DistinctDatasourceTypes))
+	for k := range codebaseStats.DistinctDatasourceTypes {
+		dgKeys = append(dgKeys, k)
+	}
+
+	sort.SliceStable(dgKeys, func(i, j int) bool {
+		if codebaseStats.DistinctDatasourceTypes[dgKeys[i]] == codebaseStats.DistinctDatasourceTypes[dgKeys[j]] {
+			return strings.Compare(dgKeys[i], dgKeys[j]) < 0
+		}
+		return codebaseStats.DistinctDatasourceTypes[dgKeys[i]] > codebaseStats.DistinctDatasourceTypes[dgKeys[j]]
+	})
+
+	rgKeys := make([]string, 0, len(codebaseStats.DistinctResourceTypes))
+	for k := range codebaseStats.DistinctResourceTypes {
+		rgKeys = append(rgKeys, k)
+	}
+
+	sort.SliceStable(rgKeys, func(i, j int) bool {
+		if codebaseStats.DistinctResourceTypes[rgKeys[i]] == codebaseStats.DistinctResourceTypes[rgKeys[j]] {
+			return strings.Compare(rgKeys[i], rgKeys[j]) < 0
+		}
+		return codebaseStats.DistinctResourceTypes[rgKeys[i]] > codebaseStats.DistinctResourceTypes[rgKeys[j]]
+	})
+
 	fmt.Println(strings.Repeat("-", 50))
 	c = color.New(color.FgWhite).Add(color.Bold)
-	c.Println("Codebase total:")
+	c.Println("Codebase stats:")
 	c = color.New(color.FgBlue).Add(color.Bold)
-	c.Printf("  %-12s %d\n", "Datasources:", codebaseTotal.Datasources)
+	c.Printf("  %-12s %d\n", "Datasources:", codebaseSizes.Datasources)
+	c = color.New(color.FgBlue)
+	c.Printf("    %-12s %d\n", "Distinct types:", len(codebaseStats.DistinctDatasourceTypes))
+	if verbose {
+		for _, k := range dgKeys {
+			numberString := "[" + strconv.Itoa(codebaseStats.DistinctDatasourceTypes[k]) + "]"
+			c.Printf("%10s %s\n", numberString, k)
+		}
+	}
 	c = color.New(color.FgGreen).Add(color.Bold)
-	c.Printf("  %-12s %d\n", "Resources:", codebaseTotal.Resources)
+	c.Printf("  %-12s %d\n", "Resources:", codebaseSizes.Resources)
+	c = color.New(color.FgGreen)
+	c.Printf("    %-12s %d\n", "Distinct types:", len(codebaseStats.DistinctResourceTypes))
+	if verbose {
+		for _, k := range rgKeys {
+			numberString := "[" + strconv.Itoa(codebaseStats.DistinctResourceTypes[k]) + "]"
+			c.Printf("%10s %s\n", numberString, k)
+		}
+	}
 	c = color.New(color.FgWhite).Add(color.Bold)
-	c.Printf("  %-12s %d\n", "Modules:", codebaseTotal.Modules)
+	c.Printf("  %-12s %d\n", "Modules:", codebaseSizes.Modules)
+	c = color.New(color.FgWhite)
+	c.Printf("    %-12s %d\n", "Max module depth:", codebaseStats.Depth)
+	// Show biggest children
+	c.Printf("    %s [%d] %s\n", "Biggest child module:", biggestChild.CumulatedSize.Resources+biggestChild.CumulatedSize.Datasources, biggestChild.Address)
 }
 
 func printTree(m data.Module, padding int, verbose bool) {
 	c := color.New(color.FgWhite).Add(color.Bold)
-	totalSizeString := ""
-	if m.CumulatedSize.Resources+m.CumulatedSize.Datasources > 1 {
-		totalSizeString = "[" + strconv.Itoa(m.CumulatedSize.Resources+m.CumulatedSize.Datasources) + "]"
-	}
+	totalSizeString := "[" + strconv.Itoa(m.CumulatedSize.Resources+m.CumulatedSize.Datasources) + "]"
 	c.Printf("%*s %s\n", padding, totalSizeString, m.Address)
 	// Sort objects first by kind, then by name
 	slices.SortFunc(m.ObjectTypes, func(i, j data.ObjectType) int {
@@ -103,18 +215,12 @@ func printTree(m data.Module, padding int, verbose bool) {
 		if r.Kind == "datasource" {
 			c = color.New(color.FgBlue).Add(color.Bold)
 		}
-		countStr := ""
-		if r.Count > 1 {
-			countStr = "[" + strconv.Itoa(r.Count) + "]"
-		}
+		countStr := "[" + strconv.Itoa(r.Count) + "]"
 		c.Printf("%*s %s\n", padding+2, countStr, r.Type)
 		if verbose {
 			for _, i := range r.Instances {
 				c := color.New(color.FgWhite)
-				countStr = ""
-				if i.Count > 1 {
-					countStr = "[" + strconv.Itoa(i.Count) + "]"
-				}
+				countStr = "[" + strconv.Itoa(i.Count) + "]"
 				c.Printf("%*s %s\n", padding+4, countStr, i.Name)
 			}
 		}

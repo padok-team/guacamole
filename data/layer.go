@@ -78,11 +78,13 @@ func (layer *Layer) BuildRootModule() {
 		layer.ComputeState()
 	}
 
-	layer.RootModule = Module{
-		Address:     "root",
-		ObjectTypes: []ObjectType{},
-		Children:    []Module{},
-	}
+	if layer.State.Values != nil {
+		layer.RootModule = Module{
+			Address:     "root",
+			ObjectTypes: []ObjectType{},
+			Children:    []Module{},
+		}
 
-	layer.RootModule.buildModule(layer.State.Values.RootModule)
+		layer.RootModule.buildModule(layer.State.Values.RootModule)
+	}
 }
