@@ -3,8 +3,9 @@ module guacamole
 go 1.20
 
 require (
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20230614215431-f32df32a01cd
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20230808231734-f15f31bf62b3
 	github.com/hashicorp/terraform-exec v0.18.1
+	github.com/hashicorp/terraform-json v0.15.0
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
@@ -18,7 +19,6 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.17.0 // indirect
-	github.com/hashicorp/terraform-json v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
