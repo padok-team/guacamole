@@ -4,6 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"guacamole/checks"
 	"guacamole/helpers"
 
@@ -15,6 +16,7 @@ var allCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Run all checks",
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Running all checks...")
 		layers, err := helpers.ComputeLayers(true)
 		if err != nil {
 			panic(err)

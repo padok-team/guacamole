@@ -4,6 +4,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"guacamole/checks"
 	"guacamole/helpers"
 
@@ -16,6 +17,7 @@ var profile = &cobra.Command{
 	Use:   "profile",
 	Short: "Display informations about resources and datasources contained in the codebase",
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Profiling layers...")
 		layers, err := helpers.ComputeLayers(false)
 		if err != nil {
 			panic(err)
