@@ -20,14 +20,12 @@ func All(layers []data.Layer) []data.Check {
 
 	go func() {
 		defer wg.Done()
-		checks := PlanChecks(layers)
-		c <- checks
+		c <- PlanChecks(layers)
 	}()
 
 	go func() {
 		defer wg.Done()
-		checks := StaticChecks()
-		c <- checks
+		c <- StaticChecks()
 	}()
 
 	wg.Wait()

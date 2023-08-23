@@ -9,25 +9,32 @@ import (
 	"guacamole/helpers"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// allCmd represents the run command
-var allCmd = &cobra.Command{
-	Use:   "all",
-	Short: "Run all checks",
+// plan represents the run command
+var profile = &cobra.Command{
+	Use:   "profile",
+	Short: "Display informations about resources and datasources contained in the codebase",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Running all checks...")
-		layers, err := helpers.ComputeLayers(true)
+		fmt.Println("Profiling layers...")
+		layers, err := helpers.ComputeLayers(false)
 		if err != nil {
 			panic(err)
 		}
-		checkResults := checks.All(layers)
-		helpers.RenderTable(checkResults)
+		verbose := viper.GetBool("verbose")
+		checks.Profile(layers, verbose)
+		// helpers.RenderTable(checkResults)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(allCmd)
+	rootCmd.AddCommand(profile)
+
+	// Add verbose flag
+	profile.PersistentFlags().BoolP("verbose", "v", false, "Display verbose output")
+
+	viper.BindPFlag("verbose", profile.PersistentFlags().Lookup("verbose"))
 
 	// Here you will define your flags and configuration settings.
 

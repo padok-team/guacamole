@@ -6,20 +6,21 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/viper"
 )
 
-func GetModules() ([]data.Module, error) {
-	codebasePath := viper.GetString("codebase-path") + "modules/"
-	modules := []data.Module{}
+func GetModules() ([]data.TerraformModule, error) {
+	codebasePath := filepath.Join(viper.GetString("codebase-path"), "modules")
+	modules := []data.TerraformModule{}
 	//Get all subdirectories in root path
 	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to get subdirectories: %w", err)
 		}
 		if info.IsDir() && path != codebasePath {
-			modules = append(modules, data.Module{Name: info.Name(), FullPath: path})
+			modules = append(modules, data.TerraformModule{Name: info.Name(), FullPath: path})
 		}
 		return nil
 	})
@@ -27,10 +28,12 @@ func GetModules() ([]data.Module, error) {
 }
 
 func GetLayers() ([]data.Layer, error) {
-	root := viper.GetString("codebase-path") // Root directory to start browsing from
+	codebasePath := viper.GetString("codebase-path") // Root directory to start browsing from
+	codebaseDirName := filepath.Base(codebasePath)
+
 	layers := []data.Layer{}
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to get layer subdirectory: %w", err)
 		}
@@ -39,7 +42,16 @@ func GetLayers() ([]data.Layer, error) {
 		if !info.IsDir() && info.Name() == "terragrunt.hcl" {
 			// exclude the files which are in the .terragrunt-cache directory
 			if !regexp.MustCompile(`.terragrunt-cache`).MatchString(path) {
-				layers = append(layers, data.Layer{Name: path[len(root)-1 : len(path)-len(info.Name())-1], FullPath: path[:len(path)-len(info.Name())-1]})
+				// TODO: start from the codebase path instead of the relative path
+				absPath, err := filepath.Abs(path)
+				if err != nil {
+					return fmt.Errorf("failed to get absolute path: %w", err)
+				}
+				fullPath := filepath.Dir(absPath)
+				// Get abs path from codebase path
+				name := strings.Split(absPath, codebaseDirName+"/")[1]
+				name = strings.ReplaceAll(name, "/terragrunt.hcl", "")
+				layers = append(layers, data.Layer{Name: name, FullPath: fullPath})
 			}
 		}
 
