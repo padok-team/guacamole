@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/fatih/color v1.15.0
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20230808231734-f15f31bf62b3
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20230925220900-5a6f8d18746d
 	github.com/hashicorp/terraform-exec v0.19.0
 	github.com/hashicorp/terraform-json v0.17.1
 	github.com/jedib0t/go-pretty/v6 v6.4.6
