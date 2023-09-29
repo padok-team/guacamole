@@ -4,12 +4,12 @@ import (
 	"guacamole/data"
 )
 
-func RefreshTime(layers []data.Layer) (data.Check, error) {
+func RefreshTime(layers []*data.Layer) (data.Check, error) {
 	checkResult := data.Check{
 		Name:   "Layers' refresh time",
 		Status: "✅",
 		// RelatedGuidelines: "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/wysiwg_patterns.md",
-		RelatedGuidelines: "http://bitly.ws/K5VV",
+		RelatedGuidelines: "https://t.ly/8d1lc",
 		Errors:            []string{},
 	}
 

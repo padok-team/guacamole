@@ -5,9 +5,9 @@ import (
 	"sync"
 )
 
-func PlanChecks(layers []data.Layer) []data.Check {
+func PlanChecks(layers []*data.Layer) []data.Check {
 	// Add plan checks here
-	checks := map[string]func([]data.Layer) (data.Check, error){
+	checks := map[string]func([]*data.Layer) (data.Check, error){
 		"IterateNoUseCount": IterateNoUseCount,
 		"RefreshTime":       RefreshTime,
 	}
@@ -21,7 +21,7 @@ func PlanChecks(layers []data.Layer) []data.Check {
 	defer close(c)
 
 	for _, checkFunction := range checks {
-		go func(checkFunction func([]data.Layer) (data.Check, error)) {
+		go func(checkFunction func([]*data.Layer) (data.Check, error)) {
 			defer wg.Done()
 
 			check, err := checkFunction(layers)

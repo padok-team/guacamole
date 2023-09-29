@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func All(layers []data.Layer) []data.Check {
+func All(layers []*data.Layer) []data.Check {
 	// List of checks to perform
 
 	var checkResults []data.Check

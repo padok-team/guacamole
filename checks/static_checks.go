@@ -10,6 +10,7 @@ func StaticChecks() []data.Check {
 	checks := map[string]func() (data.Check, error){
 		"ProviderInModule": ProviderInModule,
 		"Stuttering":       Stuttering,
+		"SnakeCase":        SnakeCase,
 	}
 
 	var checkResults []data.Check

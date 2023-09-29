@@ -12,28 +12,45 @@ import (
 )
 
 func GetModules() ([]data.TerraformModule, error) {
-	codebasePath := filepath.Join(viper.GetString("codebase-path"), "modules")
+	codebasePath := viper.GetString("codebase-path")
 	modules := []data.TerraformModule{}
 	//Get all subdirectories in root path
 	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to get subdirectories: %w", err)
 		}
-		if info.IsDir() && path != codebasePath {
-			modules = append(modules, data.TerraformModule{Name: info.Name(), FullPath: path})
+		// Check if the path is a file and its name matches "*.tf"
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".tf") {
+			// exclude the files which are in the .terragrunt-cache directory
+			if !regexp.MustCompile(`.terragrunt-cache`).MatchString(path) {
+				module := data.TerraformModule{FullPath: filepath.Dir(path), Name: filepath.Base(filepath.Dir(path))}
+				// Check if the module is already in the list
+				alreadyInList := false
+				for _, m := range modules {
+					if m.FullPath == module.FullPath {
+						alreadyInList = true
+					}
+				}
+				if !alreadyInList {
+					modules = append(modules, module)
+				}
+			}
 		}
 		return nil
 	})
 	return modules, err
 }
 
-func GetLayers() ([]data.Layer, error) {
-	codebasePath := viper.GetString("codebase-path") // Root directory to start browsing from
-	codebaseDirName := filepath.Base(codebasePath)
+func GetLayers() ([]*data.Layer, error) {
+	codebasePath := viper.GetString("codebase-path")
+	codebaseAbsPath, err := filepath.Abs(codebasePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get: %w", err)
+	}
 
-	layers := []data.Layer{}
+	layers := []*data.Layer{}
 
-	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to get layer subdirectory: %w", err)
 		}
@@ -49,9 +66,9 @@ func GetLayers() ([]data.Layer, error) {
 				}
 				fullPath := filepath.Dir(absPath)
 				// Get abs path from codebase path
-				name := strings.Split(absPath, codebaseDirName+"/")[1]
+				name := strings.Split(absPath, codebaseAbsPath+"/")[1]
 				name = strings.ReplaceAll(name, "/terragrunt.hcl", "")
-				layers = append(layers, data.Layer{Name: name, FullPath: fullPath})
+				layers = append(layers, &data.Layer{Name: name, FullPath: fullPath})
 			}
 		}
 
