@@ -2,7 +2,7 @@ name: goreleaser
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
           # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --clean --config .goreleaser.dev.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
