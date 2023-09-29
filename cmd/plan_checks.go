@@ -4,9 +4,10 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"guacamole/checks"
 	"guacamole/helpers"
+	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,8 @@ var plan = &cobra.Command{
 	Use:   "plan",
 	Short: "Run plan-related checks",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Running plan checks...")
+		l := log.New(os.Stderr, "", 0)
+		l.Println("Running plan checks...")
 		layers, err := helpers.ComputeLayers(true)
 		if err != nil {
 			panic(err)

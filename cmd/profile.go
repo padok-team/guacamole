@@ -4,10 +4,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"guacamole/checks"
 	"guacamole/data"
 	"guacamole/helpers"
+	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,7 +19,8 @@ var profile = &cobra.Command{
 	Use:   "profile",
 	Short: "Display informations about resources and datasources contained in the codebase",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Profiling layers...")
+		l := log.New(os.Stderr, "", 0)
+		l.Println("Profiling layers...")
 		layers, err := helpers.ComputeLayers(false)
 		codebase := data.Codebase{
 			Layers: layers,

@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"guacamole/data"
+	"log"
 	"strconv"
 	"strings"
 
@@ -15,7 +16,7 @@ func Profile(codebase data.Codebase, verbose bool) {
 	codebase.ComputeStats()
 	// Take the length of the longest number of objects in a layer for padding
 	if len(codebase.Layers) == 0 {
-		fmt.Println("No layers found")
+		log.Println("No layers found")
 		return
 	}
 	padding := len(strconv.Itoa(codebase.Layers[0].RootModule.Stats.CumulatedSize.Resources + codebase.Layers[0].RootModule.Stats.CumulatedSize.Datasources))

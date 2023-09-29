@@ -4,9 +4,10 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"guacamole/checks"
 	"guacamole/helpers"
+	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,8 @@ var static = &cobra.Command{
 	Use:   "static",
 	Short: "Run static code checks",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Running static checks...")
+		l := log.New(os.Stderr, "", 0)
+		l.Println("Running static checks...")
 		checkResults := checks.StaticChecks()
 		helpers.RenderTable(checkResults)
 	},

@@ -2,7 +2,7 @@ package data
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,11 +35,12 @@ type moduleDepthWarning struct {
 }
 
 func (l *Layer) ComputePlan() {
+	log := log.New(os.Stderr, "", 0)
 	dirPath := "/tmp/" + strings.ReplaceAll(l.Name, "/", "_")
 
 	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
 	if err != nil {
-		fmt.Printf("failed to create Terraform instance: %s", err)
+		log.Printf("failed to create Terraform instance: %s", err)
 	}
 
 	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
@@ -50,16 +51,16 @@ func (l *Layer) ComputePlan() {
 		}
 	}
 
-	// Create Terraform plan
-	_, err = tf.Plan(context.Background(), tfexec.Out(dirPath+"_plan.json"))
+	// Don't lock the state file while running the plan
+	_, err = tf.Plan(context.Background(), tfexec.Out(dirPath+"_plan.json"), tfexec.Lock(false))
 	if err != nil {
-		fmt.Printf("failed to create plan: %s", err)
+		log.Printf("failed to create plan: %s", err)
 	}
 
 	// Create JSON plan
 	jsonPlan, err := tf.ShowPlanFile(context.Background(), dirPath+"_plan.json")
 	if err != nil {
-		fmt.Printf("failed to create JSON plan: %s", err)
+		log.Printf("failed to create JSON plan: %s", err)
 	}
 
 	l.Plan = jsonPlan
@@ -68,14 +69,13 @@ func (l *Layer) ComputePlan() {
 func (l *Layer) ComputeState() {
 	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
 	if err != nil {
-		fmt.Printf("failed to create Terraform instance: %s", err)
+		log.Printf("failed to create Terraform instance: %s", err)
 	}
 
 	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
 	if os.IsNotExist(err) {
 		err = tf.Init(context.Background())
 		if err != nil {
-			fmt.Println(l.FullPath)
 			panic(err)
 		}
 	}
@@ -83,7 +83,7 @@ func (l *Layer) ComputeState() {
 	// Create Terraform state file
 	state, err := tf.Show(context.TODO())
 	if err != nil {
-		fmt.Printf("failed to create state: %s", err)
+		log.Printf("failed to create state: %s", err)
 	}
 
 	l.State = state
