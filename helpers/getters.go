@@ -21,8 +21,8 @@ func GetModules() ([]data.TerraformModule, error) {
 		}
 		// Check if the path is a file and its name matches "*.tf"
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".tf") {
-			// exclude the files which are in the .terragrunt-cache directory
-			if !regexp.MustCompile(`.terragrunt-cache`).MatchString(path) {
+			// exclude the files which are in the .terragrunt-cache or .terraform directory
+			if !regexp.MustCompile(`.terragrunt-cache|.terraform`).MatchString(path) {
 				module := data.TerraformModule{FullPath: filepath.Dir(path), Name: filepath.Base(filepath.Dir(path))}
 				// Check if the module is already in the list
 				alreadyInList := false
@@ -57,8 +57,8 @@ func GetLayers() ([]*data.Layer, error) {
 
 		// Check if the current path is a file and its name matches "terragrunt.hcl"
 		if !info.IsDir() && info.Name() == "terragrunt.hcl" {
-			// exclude the files which are in the .terragrunt-cache directory
-			if !regexp.MustCompile(`.terragrunt-cache`).MatchString(path) {
+			// exclude the files which are in the .terragrunt-cache or .terraform directory
+			if !regexp.MustCompile(`.terragrunt-cache|.terraform`).MatchString(path) {
 				// TODO: start from the codebase path instead of the relative path
 				absPath, err := filepath.Abs(path)
 				if err != nil {
