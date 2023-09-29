@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-func ComputeLayers(withPlan bool) ([]data.Layer, error) {
+func ComputeLayers(withPlan bool) ([]*data.Layer, error) {
 	layers, err := GetLayers()
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func ComputeLayers(withPlan bool) ([]data.Layer, error) {
 			// Remove the struct from the channel to allow another goroutine to start
 			<-guard
 			// fmt.Println("Finished processing layer: ", layer.Name)
-		}(&layers[i])
+		}(layers[i])
 	}
 
 	wg.Wait()

@@ -2,7 +2,6 @@ package data
 
 import (
 	"math"
-	"sort"
 	"strings"
 
 	tfjson "github.com/hashicorp/terraform-json"
@@ -11,11 +10,11 @@ import (
 
 type Module struct {
 	Address string
+	Name    string
 	// Resources and datasources
-	ObjectTypes   []ObjectType
-	Size          Size
-	CumulatedSize Size
-	Children      []Module
+	ObjectTypes []*ObjectType
+	Children    []*Module
+	Stats       ModuleStats
 }
 
 type ObjectType struct {
@@ -30,44 +29,47 @@ type Object struct {
 	Count int
 }
 
+type ModuleStats struct {
+	DistinctResourceTypes   map[string]int
+	DistinctDatasourceTypes map[string]int
+	Depth                   int
+	Size                    Size
+	CumulatedSize           Size
+}
+
 type Size struct {
 	Resources   int
 	Datasources int
 	Modules     int
 }
 
-type Stats struct {
-	DistinctResourceTypes   map[string]int
-	DistinctDatasourceTypes map[string]int
-	Depth                   int
-}
-
 func (m *Module) buildModule(stateModule *tfjson.StateModule) {
 	for _, c := range stateModule.ChildModules {
 		module := Module{
 			Address:     c.Address,
-			ObjectTypes: []ObjectType{},
-			Children:    []Module{},
+			Name:        c.Address,
+			ObjectTypes: []*ObjectType{},
+			Children:    []*Module{},
 		}
 
 		// If the module is not root, we want to keep only the module name
-		if module.Address != "root" {
-			module.Address = c.Address[strings.LastIndex(module.Address, ".")+1:]
+		if module.Name != "root" {
+			module.Name = c.Address[strings.LastIndex(module.Name, ".")+1:]
 		}
 
 		module.buildModule(c)
-		m.Children = append(m.Children, module)
+		m.Children = append(m.Children, &module)
 	}
 
 	m.buildResourcesAndDatasources(stateModule)
 
-	m.Size.Modules = len(m.Children)
-	m.CumulatedSize.Modules += len(m.Children)
+	m.Stats.Size.Modules = len(m.Children)
+	m.Stats.CumulatedSize.Modules += len(m.Children)
 
 	for _, c := range m.Children {
-		m.CumulatedSize.Resources += c.CumulatedSize.Resources
-		m.CumulatedSize.Datasources += c.CumulatedSize.Datasources
-		m.CumulatedSize.Modules += c.CumulatedSize.Modules
+		m.Stats.CumulatedSize.Resources += c.Stats.CumulatedSize.Resources
+		m.Stats.CumulatedSize.Datasources += c.Stats.CumulatedSize.Datasources
+		m.Stats.CumulatedSize.Modules += c.Stats.CumulatedSize.Modules
 	}
 }
 
@@ -84,12 +86,12 @@ func (m *Module) buildResourcesAndDatasources(state *tfjson.StateModule) {
 			resourceCount++
 		}
 
-		typeIndex := slices.IndexFunc(m.ObjectTypes, func(t ObjectType) bool {
+		typeIndex := slices.IndexFunc(m.ObjectTypes, func(t *ObjectType) bool {
 			return t.Type == r.Type
 		})
 
 		if typeIndex == -1 {
-			m.ObjectTypes = append(m.ObjectTypes, ObjectType{
+			m.ObjectTypes = append(m.ObjectTypes, &ObjectType{
 				Type: r.Type,
 				Kind: kind,
 				Instances: []Object{
@@ -118,78 +120,38 @@ func (m *Module) buildResourcesAndDatasources(state *tfjson.StateModule) {
 		}
 	}
 
-	m.Size.Resources = resourceCount
-	m.Size.Datasources = datasourceCount
-	m.CumulatedSize.Resources = resourceCount
-	m.CumulatedSize.Datasources = datasourceCount
+	m.Stats.Size.Resources = resourceCount
+	m.Stats.Size.Datasources = datasourceCount
+	m.Stats.CumulatedSize.Resources = resourceCount
+	m.Stats.CumulatedSize.Datasources = datasourceCount
+
 }
 
-func (m *Module) ComputeStats() Stats {
-	stats := Stats{
-		DistinctResourceTypes:   map[string]int{},
-		DistinctDatasourceTypes: map[string]int{},
-		Depth:                   0,
-	}
+func (m *Module) ComputeStats() {
+	m.Stats.DistinctResourceTypes = map[string]int{}
+	m.Stats.DistinctDatasourceTypes = map[string]int{}
 
 	for _, o := range m.ObjectTypes {
 		if o.Kind == "resource" {
-			stats.DistinctResourceTypes[o.Type] += o.Count
+			m.Stats.DistinctResourceTypes[o.Type] += o.Count
 		} else {
-			stats.DistinctDatasourceTypes[o.Type] += o.Count
+			m.Stats.DistinctDatasourceTypes[o.Type] += o.Count
 		}
 	}
 
 	for _, c := range m.Children {
-		childStats := c.ComputeStats()
-		stats.Depth = int(math.Max(float64(stats.Depth), float64(childStats.Depth+1)))
-		for k, v := range childStats.DistinctResourceTypes {
-			stats.DistinctResourceTypes[k] += v
+		c.ComputeStats()
+		m.Stats.Depth = int(math.Max(float64(m.Stats.Depth), float64(c.Stats.Depth+1)))
+		for k, v := range c.Stats.DistinctResourceTypes {
+			m.Stats.DistinctResourceTypes[k] += v
 		}
-		for k, v := range childStats.DistinctDatasourceTypes {
-			stats.DistinctDatasourceTypes[k] += v
+		for k, v := range c.Stats.DistinctDatasourceTypes {
+			m.Stats.DistinctDatasourceTypes[k] += v
 		}
+		m.Stats.Size.Resources += c.Stats.Size.Resources
+		m.Stats.Size.Datasources += c.Stats.Size.Datasources
 	}
 
-	// Sort the maps by value
-	keys := make([]string, 0, len(stats.DistinctResourceTypes))
-	for k := range stats.DistinctResourceTypes {
-		keys = append(keys, k)
-	}
-
-	// Sort first by value, then by key
-	sort.SliceStable(keys, func(i, j int) bool {
-		if stats.DistinctResourceTypes[keys[i]] == stats.DistinctResourceTypes[keys[j]] {
-			return strings.Compare(keys[i], keys[j]) < 0
-		}
-		return stats.DistinctResourceTypes[keys[i]] > stats.DistinctResourceTypes[keys[j]]
-	})
-
-	sortedDistinctResourceTypes := map[string]int{}
-	for _, k := range keys {
-		sortedDistinctResourceTypes[k] = stats.DistinctResourceTypes[k]
-	}
-
-	stats.DistinctResourceTypes = sortedDistinctResourceTypes
-
-	keys = make([]string, 0, len(stats.DistinctDatasourceTypes))
-	for k := range stats.DistinctDatasourceTypes {
-		keys = append(keys, k)
-	}
-
-	// Sort first by value, then by key
-	sort.SliceStable(keys, func(i, j int) bool {
-		if stats.DistinctDatasourceTypes[keys[i]] == stats.DistinctDatasourceTypes[keys[j]] {
-			return strings.Compare(keys[i], keys[j]) < 0
-		}
-		return stats.DistinctDatasourceTypes[keys[i]] > stats.DistinctDatasourceTypes[keys[j]]
-	})
-
-	sortedDistinctDatasourceTypes := map[string]int{}
-	for _, k := range keys {
-		sortedDistinctDatasourceTypes[k] = stats.DistinctDatasourceTypes[k]
-	}
-
-	stats.DistinctDatasourceTypes = sortedDistinctDatasourceTypes
-
-	return stats
+	m.Stats.DistinctResourceTypes = SortMapByValueAndKey(m.Stats.DistinctResourceTypes)
+	m.Stats.DistinctDatasourceTypes = SortMapByValueAndKey(m.Stats.DistinctDatasourceTypes)
 }

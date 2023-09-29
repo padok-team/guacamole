@@ -2,10 +2,8 @@ name: goreleaser
 
 on:
   push:
-    branches:
-      - main
-    tags-ignore:
-      - "*" # ignore all tags
+    tags:
+      - "*"
 
 permissions:
   contents: write
@@ -23,11 +21,8 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
-          # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
           version: latest
-          args: release --clean --nightly
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
-          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}

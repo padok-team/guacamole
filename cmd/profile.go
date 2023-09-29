@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"guacamole/checks"
+	"guacamole/data"
 	"guacamole/helpers"
 
 	"github.com/spf13/cobra"
@@ -19,11 +20,14 @@ var profile = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Profiling layers...")
 		layers, err := helpers.ComputeLayers(false)
+		codebase := data.Codebase{
+			Layers: layers,
+		}
 		if err != nil {
 			panic(err)
 		}
 		verbose := viper.GetBool("verbose")
-		checks.Profile(layers, verbose)
+		checks.Profile(codebase, verbose)
 		// helpers.RenderTable(checkResults)
 	},
 }

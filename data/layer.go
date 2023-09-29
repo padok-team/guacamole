@@ -16,7 +16,22 @@ type Layer struct {
 	FullPath   string
 	Plan       *tfjson.Plan
 	State      *tfjson.State
-	RootModule Module
+	RootModule *Module
+	Warnings   Warnings
+}
+
+type Warnings struct {
+	DatasourceInModuleWarning []datasourceInModuleWarning
+	ModuleDepthWarning        []moduleDepthWarning
+}
+
+type datasourceInModuleWarning struct {
+	Module     *Module
+	Datasource []ObjectType
+}
+
+type moduleDepthWarning struct {
+	Module Module
 }
 
 func (l *Layer) ComputePlan() {
@@ -60,6 +75,7 @@ func (l *Layer) ComputeState() {
 	if os.IsNotExist(err) {
 		err = tf.Init(context.Background())
 		if err != nil {
+			fmt.Println(l.FullPath)
 			panic(err)
 		}
 	}
@@ -79,12 +95,44 @@ func (layer *Layer) BuildRootModule() {
 	}
 
 	if layer.State.Values != nil {
-		layer.RootModule = Module{
+		layer.RootModule = &Module{
 			Address:     "root",
-			ObjectTypes: []ObjectType{},
-			Children:    []Module{},
+			Name:        "root",
+			ObjectTypes: []*ObjectType{},
+			Children:    []*Module{},
 		}
 
 		layer.RootModule.buildModule(layer.State.Values.RootModule)
 	}
+}
+
+func (layer *Layer) ComputeWarnings() {
+	if layer.RootModule.Name == "" {
+		layer.BuildRootModule()
+	}
+
+	// Check for datasources in modules
+	layer.Warnings.DatasourceInModuleWarning = computeDatasourceInModuleWarning(layer.RootModule)
+}
+
+func computeDatasourceInModuleWarning(module *Module) []datasourceInModuleWarning {
+	datasourceInModuleWarnings := []datasourceInModuleWarning{}
+
+	for _, r := range module.ObjectTypes {
+		if r.Kind == "datasource" {
+			if len(datasourceInModuleWarnings) == 0 {
+				datasourceInModuleWarnings = append(datasourceInModuleWarnings, datasourceInModuleWarning{
+					Module:     module,
+					Datasource: []ObjectType{},
+				})
+			}
+			datasourceInModuleWarnings[0].Datasource = append(datasourceInModuleWarnings[0].Datasource, *r)
+		}
+	}
+
+	for _, c := range module.Children {
+		datasourceInModuleWarnings = append(datasourceInModuleWarnings, computeDatasourceInModuleWarning(c)...)
+	}
+
+	return datasourceInModuleWarnings
 }

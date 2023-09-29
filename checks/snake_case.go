@@ -3,35 +3,43 @@ package checks
 import (
 	"guacamole/data"
 	"guacamole/helpers"
+	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func Stuttering() (data.Check, error) {
-	name := "Stuttering in the naming of the resources"
+func SnakeCase() (data.Check, error) {
+	name := "snake_case in the naming of the resources"
 	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
-	relatedGuidelines := "https://t.ly/0Faw7"
+	relatedGuidelines := "https://t.ly/HQM86"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err
 	}
 	namesInError := []string{}
+
+	pattern := `^[a-z0-9_]+$`
+	matcher, err := regexp.Compile(pattern)
+	if err != nil {
+		return data.Check{}, err
+	}
+
 	// For each module, check if the provider is defined
 	for _, module := range modules {
 		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
 		if diags.HasErrors() {
 			return data.Check{}, diags.Err()
 		}
-		//Check if the name of the resource is not a duplicate of its type
+
+		// Check if the name of the resource is not in snake case
 		for _, resource := range moduleConf.ManagedResources {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
-			if containsWord(resource.Name, resource.Type) {
+			matched := matcher.MatchString(resource.Name)
+			if !matched {
 				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
 			}
 		}
-
 	}
 
 	dataCheck := data.Check{
@@ -46,18 +54,4 @@ func Stuttering() (data.Check, error) {
 	}
 
 	return dataCheck, nil
-}
-
-func containsWord(s1, s2 string) bool {
-	words1 := strings.Split(s1, "_") // split string into words by spaces
-	words2 := strings.Split(s2, "_")
-
-	for _, word2 := range words2 {
-		for _, word1 := range words1 {
-			if word1 == word2 {
-				return true // word from s2 found in s1
-			}
-		}
-	}
-	return false
 }

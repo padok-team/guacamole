@@ -46,7 +46,7 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.PersistentFlags().StringVarP(&codebasePath, "codebase-path", "p", "", "path to your IaC codebase")
+	rootCmd.PersistentFlags().StringVarP(&codebasePath, "codebase-path", "p", ".", "path to your IaC codebase")
 
 	viper.BindPFlag("codebase-path", rootCmd.PersistentFlags().Lookup("codebase-path"))
 }
