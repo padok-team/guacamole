@@ -21,6 +21,11 @@ checksum:
   name_template: "checksums.txt"
 snapshot:
   name_template: "{{ .Tag }}-next"
+nightly:
+  name_template: "{{ .ShortCommit }}"
+  tag_name: dev
+  publish_release: true
+  keep_single_release: true
 changelog:
   sort: asc
   use: github
