@@ -8,9 +8,11 @@ import (
 func StaticChecks() []data.Check {
 	// Add static checks here
 	checks := map[string]func() (data.Check, error){
-		"ProviderInModule": ProviderInModule,
-		"Stuttering":       Stuttering,
-		"SnakeCase":        SnakeCase,
+		"ProviderInModule":        ProviderInModule,
+		"Stuttering":              Stuttering,
+		"SnakeCase":               SnakeCase,
+		"MissingVarDescription":   MissingVarDescription,
+		"CollectionVarNamePlural": CollectionVarNamePlural,
 	}
 
 	var checkResults []data.Check
