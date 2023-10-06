@@ -12,7 +12,7 @@ func StaticChecks() []data.Check {
 		"Stuttering":              Stuttering,
 		"SnakeCase":               SnakeCase,
 		"MissingVarDescription":   MissingVarDescription,
-		"CollectionVarNamePlural": CollectionVarNamePlural,
+		"CollectionVarNamePlural": VarNumberMatchesType,
 	}
 
 	var checkResults []data.Check
