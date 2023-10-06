@@ -13,6 +13,7 @@ func StaticChecks() []data.Check {
 		"SnakeCase":               SnakeCase,
 		"MissingVarDescription":   MissingVarDescription,
 		"CollectionVarNamePlural": VarNumberMatchesType,
+		"VariableTypeAny":         VariableTypeAny,
 	}
 
 	var checkResults []data.Check
