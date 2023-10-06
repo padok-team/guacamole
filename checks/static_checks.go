@@ -8,12 +8,13 @@ import (
 func StaticChecks() []data.Check {
 	// Add static checks here
 	checks := map[string]func() (data.Check, error){
-		"ProviderInModule":        ProviderInModule,
-		"Stuttering":              Stuttering,
-		"SnakeCase":               SnakeCase,
-		"MissingVarDescription":   MissingVarDescription,
-		"CollectionVarNamePlural": VarNumberMatchesType,
-		"VariableTypeAny":         VariableTypeAny,
+		"ProviderInModule":      ProviderInModule,
+		"Stuttering":            Stuttering,
+		"SnakeCase":             SnakeCase,
+		"MissingVarDescription": MissingVarDescription,
+		"VarNumberMatchesType":  VarNumberMatchesType,
+		"VariableTypeAny":       VariableTypeAny,
+		"RemoteModuleVersion":   RemoteModuleVersion,
 	}
 
 	var checkResults []data.Check
