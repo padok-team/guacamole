@@ -62,8 +62,14 @@ func Stuttering() (data.Check, error) {
 }
 
 func containsWord(s1, s2 string) bool {
-	words1 := strings.Split(s1, "_") // split string into words by spaces
-	words2 := strings.Split(s2, "_")
+	// Split the strings into words taking into account multiple possible separators
+	// A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes.
+	words1 := strings.FieldsFunc(s1, func(r rune) bool {
+		return r == '-' || r == '_'
+	})
+	words2 := strings.FieldsFunc(s2, func(r rune) bool {
+		return r == '-' || r == '_'
+	})
 
 	for _, word2 := range words2 {
 		for _, word1 := range words1 {
