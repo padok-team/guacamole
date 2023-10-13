@@ -10,7 +10,7 @@ import (
 )
 
 func ResourceNamingThisThese() (data.Check, error) {
-	name := "Resource and data in modules should be named this or these if they are unique"
+	name := "Resources and datasources in modules should be named \"this\" or \"these\" if their type is unique"
 	relatedGuidelines := "https://t.ly/9XZG"
 
 	resourcesInError := []string{}
