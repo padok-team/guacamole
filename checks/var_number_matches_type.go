@@ -36,7 +36,7 @@ func VarNumberMatchesType() (data.Check, error) {
 			variable.Type = strings.ReplaceAll(variable.Type, " ", "")
 
 			if isCollection && !pluralize.IsPlural(variable.Name) || !isCollection && !pluralize.IsSingular(variable.Name) {
-				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name+" <> "+variable.Type)
+				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name)
 			}
 		}
 	}
