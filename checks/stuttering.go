@@ -10,7 +10,7 @@ import (
 )
 
 func Stuttering() (data.Check, error) {
-	name := "Stuttering in the naming of the resources"
+	name := "Stuttering in the naming of resources"
 	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
 	relatedGuidelines := "https://t.ly/0Faw7"
 	modules, err := helpers.GetModules()
@@ -32,6 +32,19 @@ func Stuttering() (data.Check, error) {
 			}
 		}
 
+		for _, resource := range moduleConf.DataResources {
+			// I want to check if the name of the resource contains any word (separated by a dash) of its type
+			if containsWord(resource.Name, resource.Type) {
+				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
+			}
+		}
+
+		for _, resource := range moduleConf.ModuleCalls {
+			// I want to check if the name of the resource contains any word (separated by a dash) of its type
+			if containsWord(resource.Name, "module") {
+				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.Name)
+			}
+		}
 	}
 
 	dataCheck := data.Check{
@@ -49,8 +62,14 @@ func Stuttering() (data.Check, error) {
 }
 
 func containsWord(s1, s2 string) bool {
-	words1 := strings.Split(s1, "_") // split string into words by spaces
-	words2 := strings.Split(s2, "_")
+	// Split the strings into words taking into account multiple possible separators
+	// A name must start with a letter or underscore and may contain only letters, digits, underscores, and dashes.
+	words1 := strings.FieldsFunc(s1, func(r rune) bool {
+		return r == '-' || r == '_'
+	})
+	words2 := strings.FieldsFunc(s2, func(r rune) bool {
+		return r == '-' || r == '_'
+	})
 
 	for _, word2 := range words2 {
 		for _, word1 := range words1 {

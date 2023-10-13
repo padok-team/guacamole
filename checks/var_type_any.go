@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func VariableTypeAny() (data.Check, error) {
+func VarTypeAny() (data.Check, error) {
 	name := "Don't use type any for variables"
 	relatedGuidelines := "https://xxx"
 	modules, err := helpers.GetModules()

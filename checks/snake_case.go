@@ -40,6 +40,22 @@ func SnakeCase() (data.Check, error) {
 				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
 			}
 		}
+
+		for _, resource := range moduleConf.DataResources {
+			// I want to check if the name of the resource contains any word (separated by a dash) of its type
+			matched := matcher.MatchString(resource.Name)
+			if !matched {
+				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
+			}
+		}
+
+		for _, resource := range moduleConf.ModuleCalls {
+			// I want to check if the name of the resource contains any word (separated by a dash) of its type
+			matched := matcher.MatchString(resource.Name)
+			if !matched {
+				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.Name)
+			}
+		}
 	}
 
 	dataCheck := data.Check{
