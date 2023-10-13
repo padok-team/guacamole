@@ -16,6 +16,7 @@ func StaticChecks() []data.Check {
 		"VariableTypeAny":                          VariableTypeAny,
 		"RemoteModuleVersion":                      RemoteModuleVersion,
 		"RequiredProviderVersionOperatorInModules": RequiredProviderVersionOperatorInModules,
+		"ResourceNamingThisThese":                  ResourceNamingThisThese,
 	}
 
 	var checkResults []data.Check
