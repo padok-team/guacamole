@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"fmt"
 	"guacamole/data"
 	"guacamole/helpers"
 	"strconv"
@@ -11,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func CollectionVarNamePlural() (data.Check, error) {
-	name := "Collection variable name must be plural"
+func VarNumberMatchesType() (data.Check, error) {
+	name := "A variable name's number matches its type"
 	relatedGuidelines := "https://t.ly/A7P5j"
 	modules, err := helpers.GetModules()
 	if err != nil {
@@ -27,19 +26,17 @@ func CollectionVarNamePlural() (data.Check, error) {
 			return data.Check{}, diags.Err()
 		}
 
-		// Check if the name of the resource is not in snake case
 		for _, variable := range moduleConf.Variables {
-			// I want to check if the name of the resource contains any word (separated by a dash) of its type
-
 			// Check if prefix is "list"
+			isCollection := strings.HasPrefix(variable.Type, "list") || strings.HasPrefix(variable.Type, "set") || strings.HasPrefix(variable.Type, "map")
+			pluralize := pluralize.NewClient()
 
-			if strings.HasPrefix(variable.Type, "list") || strings.HasPrefix(variable.Type, "set") || strings.HasPrefix(variable.Type, "map") {
-				// Check if the variable name is plural
-				pluralize := pluralize.NewClient()
-				fmt.Println(variable.Name, pluralize.IsPlural(variable.Name))
-				if !pluralize.IsPlural(variable.Name) {
-					variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name)
-				}
+			// Remove all spaces and new lines from the type
+			variable.Type = strings.ReplaceAll(variable.Type, "\n", "")
+			variable.Type = strings.ReplaceAll(variable.Type, " ", "")
+
+			if isCollection && !pluralize.IsPlural(variable.Name) || !isCollection && !pluralize.IsSingular(variable.Name) {
+				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name+" <> "+variable.Type)
 			}
 		}
 	}
