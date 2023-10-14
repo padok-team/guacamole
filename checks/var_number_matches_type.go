@@ -12,7 +12,7 @@ import (
 
 func VarNumberMatchesType() (data.Check, error) {
 	name := "A variable name's number matches its type"
-	relatedGuidelines := "https://t.ly/A7P5j"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err

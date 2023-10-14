@@ -28,8 +28,7 @@ type ResourceChanges struct {
 
 func IterateNoUseCount(layers []*data.Layer) (data.Check, error) {
 	name := "Don't use count to create multiple resources"
-	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
-	relatedGuidelines := "https://t.ly/_P8pN"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
 	status := "✅"
 	errors := []string{}
 

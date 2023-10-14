@@ -20,7 +20,8 @@ var static = &cobra.Command{
 		l := log.New(os.Stderr, "", 0)
 		l.Println("Running static checks...")
 		checkResults := checks.StaticChecks()
-		helpers.RenderTable(checkResults)
+		// helpers.RenderTable(checkResults)
+		helpers.RenderChecks(checkResults)
 	},
 }
 
