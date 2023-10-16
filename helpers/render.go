@@ -1,11 +1,13 @@
 package helpers
 
 import (
+	"fmt"
 	"guacamole/data"
 	"os"
 	"strconv"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/savioxavier/termlink"
 	"golang.org/x/term"
 )
 
@@ -52,4 +54,30 @@ func RenderTable(checkResults []data.Check) {
 	}
 	t.AppendFooter(table.Row{"", "", "Score", score})
 	t.Render()
+}
+
+func RenderChecks(checkResults []data.Check) {
+	totalChecksOk, i := 0, 0
+	for _, c := range checkResults {
+		if c.Status == "✅" {
+			totalChecksOk++
+		}
+		i++
+	}
+	// Format the score
+	score := strconv.Itoa(totalChecksOk*100/len(checkResults)) + "%"
+	if score == "100%" {
+		score = score + " 🎉"
+	}
+	// Print the checks
+	for _, c := range checkResults {
+		fmt.Println(c.Status + " " + termlink.Link(c.Name, c.RelatedGuidelines))
+		if len(c.Errors) > 0 {
+			for _, err := range c.Errors {
+				fmt.Println("  - " + err)
+			}
+		}
+	}
+	// Print the score
+	fmt.Println("Score: " + score + " (" + strconv.Itoa(totalChecksOk) + "/" + strconv.Itoa(i) + ")")
 }

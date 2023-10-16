@@ -10,7 +10,7 @@ import (
 
 func RequiredProviderVersionOperatorInModules() (data.Check, error) {
 	name := "Required provider versions in modules should be set with ~> operator"
-	relatedGuidelines := "https://t.ly/0bxoy"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err

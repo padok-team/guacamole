@@ -11,7 +11,7 @@ import (
 
 func ResourceNamingThisThese() (data.Check, error) {
 	name := "Resources and datasources in modules should be named \"this\" or \"these\" if their type is unique"
-	relatedGuidelines := "https://t.ly/9XZG"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
 
 	resourcesInError := []string{}
 

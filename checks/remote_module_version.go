@@ -12,7 +12,7 @@ import (
 
 func RemoteModuleVersion() (data.Check, error) {
 	name := "Remote module call should be pinned to a specific version"
-	relatedGuidelines := "https://xxx"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err

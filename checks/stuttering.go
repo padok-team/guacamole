@@ -11,8 +11,7 @@ import (
 
 func Stuttering() (data.Check, error) {
 	name := "Stuttering in the naming of resources"
-	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
-	relatedGuidelines := "https://t.ly/0Faw7"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err

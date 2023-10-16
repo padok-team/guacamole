@@ -10,7 +10,7 @@ import (
 
 func MissingVarDescription() (data.Check, error) {
 	name := "Missing description for variables"
-	relatedGuidelines := "https://t.ly/vKG6L"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err
