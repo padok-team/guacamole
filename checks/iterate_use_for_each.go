@@ -26,11 +26,13 @@ type ResourceChanges struct {
 	ResourceChanges []ResourceChange `json:"resource_changes"`
 }
 
-func IterateNoUseCount(layers []*data.Layer) (data.Check, error) {
-	name := "Don't use count to create multiple resources"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
-	status := "✅"
-	errors := []string{}
+func IterateUseForEach(layers []*data.Layer) (data.Check, error) {
+	dataCheck := data.Check{
+		ID:                "TF_MOD_003",
+		Name:              "Use for_each to create multiple resources of the same type",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html",
+		Status:            "✅",
+	}
 
 	c := make(chan []string, len(layers))
 
@@ -50,19 +52,12 @@ func IterateNoUseCount(layers []*data.Layer) (data.Check, error) {
 	for i := 0; i < len(layers); i++ {
 		checkErrors := <-c
 		if len(checkErrors) > 0 {
-			status = "❌"
-			errors = append(errors, checkErrors...)
+			dataCheck.Status = "❌"
+			dataCheck.Errors = append(dataCheck.Errors, checkErrors...)
 		}
 	}
 
-	data := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            status,
-		Errors:            errors,
-	}
-
-	return data, nil
+	return dataCheck, nil
 }
 
 func checkLayer(layer *data.Layer) []string {

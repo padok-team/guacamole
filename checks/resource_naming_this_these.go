@@ -10,8 +10,12 @@ import (
 )
 
 func ResourceNamingThisThese() (data.Check, error) {
-	name := "Resources and datasources in modules should be named \"this\" or \"these\" if their type is unique"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
+	dataCheck := data.Check{
+		ID:                "TF_NAM_001",
+		Name:              "Resources and datasources in modules should be named \"this\" or \"these\" if their type is unique",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming",
+		Status:            "✅",
+	}
 
 	resourcesInError := []string{}
 
@@ -71,12 +75,8 @@ func ResourceNamingThisThese() (data.Check, error) {
 			}
 		}
 	}
-	dataCheck := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            "✅",
-		Errors:            resourcesInError,
-	}
+
+	dataCheck.Errors = resourcesInError
 
 	if len(resourcesInError) > 0 {
 		dataCheck.Status = "❌"

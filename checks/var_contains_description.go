@@ -8,9 +8,14 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func MissingVarDescription() (data.Check, error) {
-	name := "Missing description for variables"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables"
+func VarContainsDescription() (data.Check, error) {
+	dataCheck := data.Check{
+		ID:                "TF_VAR_001",
+		Name:              "Variable should contain a description",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#variables",
+		Status:            "✅",
+	}
+
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err
@@ -35,12 +40,7 @@ func MissingVarDescription() (data.Check, error) {
 		}
 	}
 
-	dataCheck := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            "✅",
-		Errors:            variablesInError,
-	}
+	dataCheck.Errors = variablesInError
 
 	if len(variablesInError) > 0 {
 		dataCheck.Status = "❌"

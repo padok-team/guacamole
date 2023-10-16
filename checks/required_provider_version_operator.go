@@ -9,8 +9,13 @@ import (
 )
 
 func RequiredProviderVersionOperatorInModules() (data.Check, error) {
-	name := "Required provider versions in modules should be set with ~> operator"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html"
+	dataCheck := data.Check{
+		ID:                "TF_MOD_003",
+		Name:              "Required provider versions in modules should be set with ~> operator",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables",
+		Status:            "✅",
+	}
+
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err
@@ -40,12 +45,7 @@ func RequiredProviderVersionOperatorInModules() (data.Check, error) {
 		}
 	}
 
-	dataCheck := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            "✅",
-		Errors:            requiredProvidersInError,
-	}
+	dataCheck.Errors = requiredProvidersInError
 
 	if len(requiredProvidersInError) > 0 {
 		dataCheck.Status = "❌"

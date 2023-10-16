@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // plan represents the run command
@@ -21,13 +22,17 @@ var static = &cobra.Command{
 		l.Println("Running static checks...")
 		checkResults := checks.StaticChecks()
 		// helpers.RenderTable(checkResults)
-		helpers.RenderChecks(checkResults)
+		verbose := viper.GetBool("verbose")
+		helpers.RenderChecks(checkResults, verbose)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(static)
 
+	static.PersistentFlags().BoolP("verbose", "v", false, "Display verbose output")
+
+	viper.BindPFlag("verbose", static.PersistentFlags().Lookup("verbose"))
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

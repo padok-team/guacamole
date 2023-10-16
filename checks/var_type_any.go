@@ -10,8 +10,13 @@ import (
 )
 
 func VarTypeAny() (data.Check, error) {
-	name := "Don't use type any for variables"
-	relatedGuidelines := "https://xxx"
+	dataCheck := data.Check{
+		ID:                "TF_VAR_002",
+		Name:              "Variable should declare a specific type",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-type-any-in-variables",
+		Status:            "✅",
+	}
+
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err
@@ -35,12 +40,7 @@ func VarTypeAny() (data.Check, error) {
 		}
 	}
 
-	dataCheck := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            "✅",
-		Errors:            variablesInError,
-	}
+	dataCheck.Errors = variablesInError
 
 	if len(variablesInError) > 0 {
 		dataCheck.Status = "❌"
