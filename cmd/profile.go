@@ -38,9 +38,6 @@ func init() {
 	rootCmd.AddCommand(profile)
 
 	// Add verbose flag
-	profile.PersistentFlags().BoolP("verbose", "v", false, "Display verbose output")
-
-	viper.BindPFlag("verbose", profile.PersistentFlags().Lookup("verbose"))
 
 	// Here you will define your flags and configuration settings.
 

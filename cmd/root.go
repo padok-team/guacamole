@@ -49,6 +49,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&codebasePath, "codebase-path", "p", ".", "path to your IaC codebase")
 
 	viper.BindPFlag("codebase-path", rootCmd.PersistentFlags().Lookup("codebase-path"))
+
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Display verbose output")
+	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 }
 
 // initConfig reads in config file and ENV variables if set.

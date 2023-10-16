@@ -20,6 +20,7 @@ type Module struct {
 type ObjectType struct {
 	Type      string
 	Kind      string // resource or datasource
+	Index     any    // Can be a string or an int
 	Instances []Object
 	Count     int
 }
@@ -92,8 +93,9 @@ func (m *Module) buildResourcesAndDatasources(state *tfjson.StateModule) {
 
 		if typeIndex == -1 {
 			m.ObjectTypes = append(m.ObjectTypes, &ObjectType{
-				Type: r.Type,
-				Kind: kind,
+				Type:  r.Type,
+				Kind:  kind,
+				Index: r.Index,
 				Instances: []Object{
 					{
 						Name:  r.Name,
