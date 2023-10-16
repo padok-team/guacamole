@@ -11,8 +11,8 @@ import (
 )
 
 func VarNumberMatchesType() (data.Check, error) {
-	name := "A variable name's number matches its type"
-	relatedGuidelines := "https://t.ly/A7P5j"
+	name := "Variable name's number matches its type"
+	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables"
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err

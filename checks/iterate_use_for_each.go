@@ -26,8 +26,8 @@ type ResourceChanges struct {
 	ResourceChanges []ResourceChange `json:"resource_changes"`
 }
 
-func IterateNoUseCount(layers []*data.Layer) (data.Check, error) {
-	name := "Don't use count to create multiple resources"
+func IterateUseForEach(layers []*data.Layer) (data.Check, error) {
+	name := "Use for_each to create multiple resources of the same type"
 	// relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html#list-iteration-count"
 	relatedGuidelines := "https://t.ly/_P8pN"
 	status := "✅"

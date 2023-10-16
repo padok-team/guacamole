@@ -10,7 +10,7 @@ import (
 )
 
 func VarTypeAny() (data.Check, error) {
-	name := "Don't use type any for variables"
+	name := "Variables should declare a specific type"
 	relatedGuidelines := "https://xxx"
 	modules, err := helpers.GetModules()
 	if err != nil {
