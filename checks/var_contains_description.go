@@ -9,8 +9,13 @@ import (
 )
 
 func VarContainsDescription() (data.Check, error) {
-	name := "Variables should contain a description"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables"
+	dataCheck := data.Check{
+		ID:                "TF_VAR_001",
+		Name:              "Variable should contain a description",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#variables",
+		Status:            "✅",
+	}
+
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err
@@ -35,12 +40,7 @@ func VarContainsDescription() (data.Check, error) {
 		}
 	}
 
-	dataCheck := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            "✅",
-		Errors:            variablesInError,
-	}
+	dataCheck.Errors = variablesInError
 
 	if len(variablesInError) > 0 {
 		dataCheck.Status = "❌"

@@ -11,8 +11,13 @@ import (
 )
 
 func RemoteModuleVersion() (data.Check, error) {
-	name := "Remote module call should be pinned to a specific version"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html"
+	dataCheck := data.Check{
+		ID:                "TF_MOD_001",
+		Name:              "Remote module call should be pinned to a specific version",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html#module-layer-versioning",
+		Status:            "✅",
+	}
+
 	modules, err := helpers.GetModules()
 	if err != nil {
 		return data.Check{}, err
@@ -53,12 +58,7 @@ func RemoteModuleVersion() (data.Check, error) {
 		}
 	}
 
-	dataCheck := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            "✅",
-		Errors:            modulesInError,
-	}
+	dataCheck.Errors = modulesInError
 
 	if len(modulesInError) > 0 {
 		dataCheck.Status = "❌"

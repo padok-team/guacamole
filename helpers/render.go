@@ -56,7 +56,7 @@ func RenderTable(checkResults []data.Check) {
 	t.Render()
 }
 
-func RenderChecks(checkResults []data.Check) {
+func RenderChecks(checkResults []data.Check, verbose bool) {
 	totalChecksOk, i := 0, 0
 	for _, c := range checkResults {
 		if c.Status == "✅" {
@@ -71,13 +71,13 @@ func RenderChecks(checkResults []data.Check) {
 	}
 	// Print the checks
 	for _, c := range checkResults {
-		fmt.Println(c.Status + " " + termlink.Link(c.Name, c.RelatedGuidelines))
-		if len(c.Errors) > 0 {
+		fmt.Printf("%s %s - %s\n", c.Status, c.ID, termlink.Link(c.Name, c.RelatedGuidelines))
+		if len(c.Errors) > 0 && verbose {
 			for _, err := range c.Errors {
-				fmt.Println("  - " + err)
+				fmt.Println("  - ", err)
 			}
 		}
 	}
 	// Print the score
-	fmt.Println("Score: " + score + " (" + strconv.Itoa(totalChecksOk) + "/" + strconv.Itoa(i) + ")")
+	fmt.Printf("Score: %s (%d/%d)\n", score, totalChecksOk, i)
 }

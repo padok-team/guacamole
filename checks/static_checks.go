@@ -3,6 +3,8 @@ package checks
 import (
 	"guacamole/data"
 	"sync"
+
+	"golang.org/x/exp/slices"
 )
 
 func StaticChecks() []data.Check {
@@ -42,8 +44,20 @@ func StaticChecks() []data.Check {
 	wg.Wait()
 
 	for i := 0; i < len(checks); i++ {
-		checkResults = append(checkResults, <-c)
+		check := <-c
+		checkResults = append(checkResults, check)
 	}
+
+	// Sort the checks by their ID
+	slices.SortFunc(checkResults, func(i, j data.Check) int {
+		if i.ID < j.ID {
+			return -1
+		}
+		if i.ID > j.ID {
+			return 1
+		}
+		return 0
+	})
 
 	return checkResults
 }

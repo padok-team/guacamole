@@ -8,8 +8,13 @@ import (
 )
 
 func ProviderInModule() (data.Check, error) {
-	name := "Provider should be defined by the consumer of the module"
-	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules"
+	dataCheck := data.Check{
+		ID:                "TF_MOD_002",
+		Name:              "Provider should be defined by the consumer of the module",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules",
+		Status:            "✅",
+	}
+
 	// Find recusively all the modules in the current directory
 	modules, err := helpers.GetModules()
 	if err != nil {
@@ -28,12 +33,7 @@ func ProviderInModule() (data.Check, error) {
 		}
 	}
 
-	dataCheck := data.Check{
-		Name:              name,
-		RelatedGuidelines: relatedGuidelines,
-		Status:            "✅",
-		Errors:            modulesInError,
-	}
+	dataCheck.Errors = modulesInError
 
 	if len(modulesInError) > 0 {
 		dataCheck.Status = "❌"
