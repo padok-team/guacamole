@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func MissingVarDescription() (data.Check, error) {
-	name := "Missing description for variables"
+func VarContainsDescription() (data.Check, error) {
+	name := "Variables should contain a description"
 	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables"
 	modules, err := helpers.GetModules()
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 )
 
 func SnakeCase() (data.Check, error) {
-	name := "Snake_case in the naming of the resources"
+	name := "Use snake_case for all resource names"
 	relatedGuidelines := "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming"
 	modules, err := helpers.GetModules()
 	if err != nil {

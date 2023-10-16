@@ -8,7 +8,7 @@ import (
 func PlanChecks(layers []*data.Layer) []data.Check {
 	// Add plan checks here
 	checks := map[string]func([]*data.Layer) (data.Check, error){
-		"IterateNoUseCount": IterateNoUseCount,
+		"IterateUseForEach": IterateUseForEach,
 		"RefreshTime":       RefreshTime,
 	}
 
