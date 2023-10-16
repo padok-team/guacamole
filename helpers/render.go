@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"guacamole/data"
 	"os"
 	"strconv"
@@ -70,13 +71,13 @@ func RenderChecks(checkResults []data.Check) {
 	}
 	// Print the checks
 	for _, c := range checkResults {
-		println(c.Status + " " + termlink.Link(c.Name, c.RelatedGuidelines))
+		fmt.Println(c.Status + " " + termlink.Link(c.Name, c.RelatedGuidelines))
 		if len(c.Errors) > 0 {
 			for _, err := range c.Errors {
-				println("  - " + err)
+				fmt.Println("  - " + err)
 			}
 		}
 	}
 	// Print the score
-	println("Score: " + score)
+	fmt.Println("Score: " + score + " (" + strconv.Itoa(totalChecksOk) + "/" + strconv.Itoa(i) + ")")
 }
