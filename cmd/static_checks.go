@@ -19,10 +19,10 @@ var static = &cobra.Command{
 	Short: "Run static code checks",
 	Run: func(cmd *cobra.Command, args []string) {
 		l := log.New(os.Stderr, "", 0)
+		verbose := viper.GetBool("verbose")
 		l.Println("Running static checks...")
 		checkResults := checks.StaticChecks()
 		// helpers.RenderTable(checkResults)
-		verbose := viper.GetBool("verbose")
 		helpers.RenderChecks(checkResults, verbose)
 	},
 }

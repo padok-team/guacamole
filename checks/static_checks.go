@@ -2,9 +2,12 @@ package checks
 
 import (
 	"guacamole/data"
+	"os"
+	"strings"
 	"sync"
 
 	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v3"
 )
 
 func StaticChecks() []data.Check {
@@ -58,6 +61,45 @@ func StaticChecks() []data.Check {
 		}
 		return 0
 	})
+
+	// Open the YAML file .guacamole.baseline.yaml and check if the checks are enabled or not
+	// If the check is enabled, we add it to the checkResults
+	baseline, err := os.ReadFile(".guacamole.baseline.yaml")
+	if err != nil {
+		panic(err)
+	}
+
+	baselineParsed := data.Baseline{}
+
+	// Parse the YAML file
+	err = yaml.Unmarshal(baseline, &baselineParsed)
+	if err != nil {
+		panic(err)
+	}
+
+	for k, ignored := range baselineParsed.Ignore {
+		for i, check := range checkResults {
+			if check.ID == k {
+				for _, checkResult := range checkResults {
+					if checkResult.ID == k {
+						for j, checkError := range checkResult.Errors {
+							// If ignored string is contained in checkerror string, we remove it from the checkResult.Errors
+							for _, ignore := range ignored {
+								if strings.Contains(checkError, ignore) {
+									if len(checkResults[i].Errors) == 1 {
+										checkResults[i].Status = "✅"
+										checkResults[i].Errors = []string{}
+									} else {
+										checkResults[i].Errors = append(checkResult.Errors[:j], checkResult.Errors[j+1:]...)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	return checkResults
 }
