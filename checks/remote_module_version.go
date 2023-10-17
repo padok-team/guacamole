@@ -28,7 +28,7 @@ func RemoteModuleVersion() (data.Check, error) {
 	// Example: v1.2.3
 	versionMatcher := regexp.MustCompile(`^v?\d+\.\d+\.\d+(-\w+)?$`)
 	// Regex matcher for git repository link with a tag
-	gitRefMatcher := regexp.MustCompile(`^git::https:\/\/github\.com\/.*\.git\?ref=.*$`)
+	gitRefMatcher := regexp.MustCompile(`^git.+\.git.*\?ref=.*$`)
 
 	for _, module := range modules {
 		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
@@ -40,7 +40,7 @@ func RemoteModuleVersion() (data.Check, error) {
 			// Check if the module is a remote module and not a local one
 			if moduleCall.Source != "" && moduleCall.Source[0] != '.' {
 				// Check if the module comes from the Terraform Registry or from a git repository
-				if strings.HasPrefix(moduleCall.Source, "git::") {
+				if strings.HasPrefix(moduleCall.Source, "git") {
 					// If the module comes from a git repository, check if the version is a tag
 					if !gitRefMatcher.MatchString(moduleCall.Source) {
 						modulesInError = append(modulesInError, moduleCall.Pos.Filename+":"+strconv.Itoa(moduleCall.Pos.Line)+" --> "+moduleCall.Name)
