@@ -29,7 +29,7 @@ func ComputeLayers(withPlan bool) ([]*data.Layer, error) {
 		// fmt.Println("Processing layer: ", layers[i].Name)
 		go func(layer *data.Layer) {
 			defer wg.Done()
-			layer.ComputeState()
+			layer.BuildRootModule()
 			if withPlan {
 				layer.ComputePlan()
 			}

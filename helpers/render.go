@@ -74,7 +74,7 @@ func RenderChecks(checkResults []data.Check, verbose bool) {
 		fmt.Printf("%s %s - %s\n", c.Status, c.ID, termlink.Link(c.Name, c.RelatedGuidelines))
 		if len(c.Errors) > 0 && verbose {
 			for _, err := range c.Errors {
-				fmt.Println("  - ", err)
+				fmt.Println("  -", err)
 			}
 		}
 	}

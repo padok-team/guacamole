@@ -5,11 +5,10 @@ import (
 	"sync"
 )
 
-func PlanChecks(layers []*data.Layer) []data.Check {
-	// Add plan checks here
+func StateChecks(layers []*data.Layer) []data.Check {
+	// Add state checks here
 	checks := map[string]func([]*data.Layer) (data.Check, error){
 		"IterateUseForEach": IterateUseForEach,
-		"RefreshTime":       RefreshTime,
 	}
 
 	var checkResults []data.Check

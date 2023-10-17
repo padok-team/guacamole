@@ -20,7 +20,7 @@ func All(layers []*data.Layer) []data.Check {
 
 	go func() {
 		defer wg.Done()
-		c <- PlanChecks(layers)
+		c <- StateChecks(layers)
 	}()
 
 	go func() {

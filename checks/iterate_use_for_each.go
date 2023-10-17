@@ -1,9 +1,8 @@
 package checks
 
 import (
-	"fmt"
+	"encoding/json"
 	"guacamole/data"
-	"regexp"
 	"strconv"
 	"sync"
 )
@@ -28,68 +27,69 @@ type ResourceChanges struct {
 
 func IterateUseForEach(layers []*data.Layer) (data.Check, error) {
 	dataCheck := data.Check{
-		ID:                "TF_MOD_003",
+		ID:                "TF_MOD_004",
 		Name:              "Use for_each to create multiple resources of the same type",
 		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html",
 		Status:            "✅",
 	}
 
-	c := make(chan []string, len(layers))
+	var checkableLayers []*data.Layer
+
+	var allCheckErrors []string
+
+	for _, layer := range layers {
+		if layer.RootModule != nil {
+			checkableLayers = append(checkableLayers, layer)
+		}
+	}
+
+	c := make(chan []string, len(checkableLayers))
 
 	wg := new(sync.WaitGroup)
-	wg.Add(len(layers))
+	wg.Add(len(checkableLayers))
 
-	for i := range layers {
+	for i := range checkableLayers {
 		go func(layer *data.Layer) {
 			defer wg.Done()
-			c <- checkLayer(layer)
-		}(layers[i])
+			c <- checkModules(layer.Name, layer.RootModule)
+		}(checkableLayers[i])
 	}
 
 	wg.Wait()
 
 	// Wait for all goroutines to finish
-	for i := 0; i < len(layers); i++ {
+	for i := 0; i < len(checkableLayers); i++ {
 		checkErrors := <-c
 		if len(checkErrors) > 0 {
 			dataCheck.Status = "❌"
-			dataCheck.Errors = append(dataCheck.Errors, checkErrors...)
+			allCheckErrors = append(allCheckErrors, checkErrors...)
 		}
 	}
+
+	dataCheck.Errors = allCheckErrors
 
 	return dataCheck, nil
 }
 
-func checkLayer(layer *data.Layer) []string {
-	var index int
-	var indexString string
-	var checkedResources, checkErrors []string
+func checkModules(layerAddress string, m *data.Module) []string {
+	var checkErrors []string
 
-	// Analyze plan for resources with count > 1
-	for _, rc := range layer.Plan.ResourceChanges {
-		// Parse the module address to find numbers inside of []
-		regexpIndexMatch := regexp.MustCompile(`\[(.*?)\]`).FindStringSubmatch(rc.Address)
-		if len(regexpIndexMatch) > 0 {
-			indexString = regexpIndexMatch[1]
-		}
-
-		// Ignore error in case of a string into the brackets, meaning that the resource was not created with count
-		index, _ = strconv.Atoi(indexString)
-
-		if index > 0 {
-			// Check if the resource was already checked
-			alreadyChecked := false
-			for _, checkedResource := range checkedResources {
-				if checkedResource == rc.ModuleAddress {
-					alreadyChecked = true
-					break
+	if len(m.ObjectTypes) > 0 {
+		for _, o := range m.ObjectTypes {
+			// Check if type of o.Index is int or string
+			switch o.Index.(type) {
+			// If it's an int, we can assume that the resource was created with count
+			case json.Number:
+				if o.Count > 1 {
+					checkErrors = append(checkErrors, "[layer] "+layerAddress+" --> [module] "+m.Address+" --> [resource] "+o.Type+" ("+strconv.Itoa(o.Count)+")")
 				}
-			}
-			if !alreadyChecked {
-				checkedResources = append(checkedResources, rc.ModuleAddress)
-				checkErrors = append(checkErrors, fmt.Sprintf("%s --> %s", layer.Name, rc.Address))
 			}
 		}
 	}
+
+	for _, c := range m.Children {
+		checkErrors = append(checkErrors, checkModules(layerAddress, c)...)
+	}
+
 	return checkErrors
 }
