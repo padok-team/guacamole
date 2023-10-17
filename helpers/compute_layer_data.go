@@ -20,9 +20,12 @@ func ComputeLayers(withPlan bool) ([]*data.Layer, error) {
 	guard := make(chan struct{}, maxProcs)
 
 	wg := new(sync.WaitGroup)
-	wg.Add(len(layers))
 
 	for i := range layers {
+		if layers[i].RootModule != nil {
+			continue
+		}
+		wg.Add(1)
 		// Add a struct to the channel to start a goroutine
 		// If the channel is full, the goroutine will wait until another one finishes and removes the struct from the channel
 		guard <- struct{}{}

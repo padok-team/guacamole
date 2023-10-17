@@ -107,12 +107,13 @@ func (layer *Layer) BuildRootModule() {
 }
 
 func (layer *Layer) ComputeWarnings() {
-	if layer.RootModule.Name == "" {
+	if layer.RootModule == nil {
 		layer.BuildRootModule()
 	}
 
-	// Check for datasources in modules
-	layer.Warnings.DatasourceInModuleWarning = computeDatasourceInModuleWarning(layer.RootModule)
+	if layer.RootModule != nil {
+		layer.Warnings.DatasourceInModuleWarning = computeDatasourceInModuleWarning(layer.RootModule)
+	}
 }
 
 func computeDatasourceInModuleWarning(module *Module) []datasourceInModuleWarning {

@@ -25,9 +25,11 @@ type CodebaseStats struct {
 func (c *Codebase) BuildLayers() {
 	wg := new(sync.WaitGroup)
 
-	wg.Add(len(c.Layers))
-
 	for i := range c.Layers {
+		if c.Layers[i].RootModule == nil {
+			continue
+		}
+		wg.Add(1)
 		go func(layer *Layer) {
 			defer wg.Done()
 			layer.BuildRootModule()
@@ -41,6 +43,9 @@ func (c *Codebase) ComputeStats() {
 	distinctDatasourceTypes, distinctResourceTypes := map[string]int{}, map[string]int{}
 
 	for _, l := range c.Layers {
+		if l.RootModule == nil {
+			continue
+		}
 		// Compute all module stats
 		l.RootModule.ComputeStats()
 

@@ -19,7 +19,17 @@ func Profile(codebase data.Codebase, verbose bool) {
 		log.Println("No layers found")
 		return
 	}
-	padding := len(strconv.Itoa(codebase.Layers[0].RootModule.Stats.CumulatedSize.Resources + codebase.Layers[0].RootModule.Stats.CumulatedSize.Datasources))
+
+	padding := 4
+	for _, l := range codebase.Layers {
+		if l.RootModule != nil {
+			cumulatedSizeStringLength := len(strconv.Itoa(l.RootModule.Stats.CumulatedSize.Resources + l.RootModule.Stats.CumulatedSize.Datasources))
+			if cumulatedSizeStringLength > padding {
+				padding = cumulatedSizeStringLength
+			}
+			break
+		}
+	}
 	if padding%2 == 0 {
 		padding += 4
 	} else {
@@ -39,6 +49,9 @@ func Profile(codebase data.Codebase, verbose bool) {
 	c = color.New(color.FgYellow).Add(color.Bold)
 	c.Println("Profiling by layer:")
 	for _, layer := range codebase.Layers {
+		if layer.RootModule == nil {
+			continue
+		}
 		fmt.Println(strings.Repeat("-", 50))
 		c = color.New(color.FgYellow).Add(color.Bold)
 		c.Printf("%s\n", layer.Name)
@@ -107,7 +120,9 @@ func Profile(codebase data.Codebase, verbose bool) {
 	// Show biggest layer
 	c.Printf("    %s [%d] %s\n", "Biggest layer:", codebase.Stats.BiggestLayer.RootModule.Stats.CumulatedSize.Resources+codebase.Stats.BiggestLayer.RootModule.Stats.CumulatedSize.Datasources, codebase.Stats.BiggestLayer.Name)
 	// Show biggest children
-	c.Printf("    %s [%d] %s\n", "Biggest child module:", codebase.Stats.BiggestChildModule.Stats.CumulatedSize.Resources+codebase.Stats.BiggestChildModule.Stats.CumulatedSize.Datasources, codebase.Stats.BiggestChildModule.Address)
+	if codebase.Stats.BiggestChildModule != nil {
+		c.Printf("    %s [%d] %s\n", "Biggest child module:", codebase.Stats.BiggestChildModule.Stats.CumulatedSize.Resources+codebase.Stats.BiggestChildModule.Stats.CumulatedSize.Datasources, codebase.Stats.BiggestChildModule.Address)
+	}
 	// Show warnings
 	c = color.New(color.FgYellow).Add(color.Bold)
 	c.Printf("  %s\n", "Warnings:")
