@@ -6,6 +6,28 @@ Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-gui
 
 ## Install
 
+### With Homebrew
+
+> :information: If you use Linux, you can install [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux)
+
+:warning: A GitHub PAT is required because Guacamole is a private repository for the moment.
+
+Create a GitHub classic Personal Access Token with `repo` permissions.
+
+Export it to your env variables and in your `.zshrc`, `.bashrc` ... :
+
+```bash
+export HOMEBREW_GITHUB_API_TOKEN="***********"
+```
+
+Then you should be able to download Guacamole using the Padok tap.
+
+```bash
+brew tap padok-team/tap
+brew install guacamole
+```
+### From GitHub
+
 **Prerequisites :**
 - Golang
 - Terraform
