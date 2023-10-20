@@ -34,11 +34,6 @@ jobs:
           RELEASE_NAME=guacamole@${VERSION#v}
           echo "RELEASE_NAME=${RELEASE_NAME%-*}" >> $GITHUB_ENV
 
-          echo $RELEASE_NAME
-          echo $BUILD_TIMESTAMP
-          echo $VERSION
-          echo $COMMIT_HASH
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
@@ -50,7 +45,3 @@ jobs:
           # This token was created by cterence on 20/10/2023 to allow goreleaser to push to the homebrew tap
           # Read : https://goreleaser.com/errors/resource-not-accessible-by-integration/#learning-more
           HOMEBREW_PAT: ${{ secrets.HOMEBREW_PAT }}
-          RELEASE_NAME: ${{ env.RELEASE_NAME }}
-          BUILD_TIMESTAMP: ${{ env.BUILD_TIMESTAMP }}
-          VERSION: ${{ env.VERSION }}
-          COMMIT_HASH: ${{ env.COMMIT_HASH }}
