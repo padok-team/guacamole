@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	Version        = "dev"
-	CommitHash     = "n/a"
-	BuildTimestamp = "n/a"
+	Version        string
+	CommitHash     string
+	BuildTimestamp string
 )
 
 func BuildVersion() string {

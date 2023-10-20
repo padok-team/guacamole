@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"guacamole/internal/version"
+
+	"github.com/padok-team/guacamole/internal/version"
 
 	"github.com/spf13/cobra"
 )

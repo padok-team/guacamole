@@ -1,9 +1,10 @@
 package checks
 
 import (
-	"guacamole/data"
-	"guacamole/helpers"
 	"regexp"
+
+	"github.com/padok-team/guacamole/data"
+	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )

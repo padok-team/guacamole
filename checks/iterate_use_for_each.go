@@ -2,9 +2,10 @@ package checks
 
 import (
 	"encoding/json"
-	"guacamole/data"
 	"strconv"
 	"sync"
+
+	"github.com/padok-team/guacamole/data"
 )
 
 type Change struct {

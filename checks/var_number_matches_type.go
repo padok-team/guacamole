@@ -1,10 +1,11 @@
 package checks
 
 import (
-	"guacamole/data"
-	"guacamole/helpers"
 	"strconv"
 	"strings"
+
+	"github.com/padok-team/guacamole/data"
+	"github.com/padok-team/guacamole/helpers"
 
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"

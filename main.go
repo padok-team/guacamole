@@ -1,7 +1,7 @@
 package main
 
 import (
-	"guacamole/cmd"
+	"github.com/padok-team/guacamole/cmd"
 )
 
 func main() {

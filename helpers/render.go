@@ -2,9 +2,10 @@ package helpers
 
 import (
 	"fmt"
-	"guacamole/data"
 	"os"
 	"strconv"
+
+	"github.com/padok-team/guacamole/data"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/savioxavier/termlink"

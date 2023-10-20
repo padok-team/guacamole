@@ -1,7 +1,7 @@
 package checks
 
 import (
-	"guacamole/data"
+	"github.com/padok-team/guacamole/data"
 )
 
 func RefreshTime(layers []*data.Layer) (data.Check, error) {

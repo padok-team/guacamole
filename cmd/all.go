@@ -4,10 +4,11 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"guacamole/checks"
-	"guacamole/helpers"
 	"log"
 	"os"
+
+	"github.com/padok-team/guacamole/checks"
+	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/spf13/cobra"
 )

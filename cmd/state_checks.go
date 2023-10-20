@@ -5,10 +5,11 @@ package cmd
 
 import (
 	"fmt"
-	"guacamole/checks"
-	"guacamole/helpers"
 	"log"
 	"os"
+
+	"github.com/padok-team/guacamole/checks"
+	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

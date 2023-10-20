@@ -1,9 +1,10 @@
 package helpers
 
 import (
-	"guacamole/data"
 	"runtime"
 	"sync"
+
+	"github.com/padok-team/guacamole/data"
 )
 
 func ComputeLayers(withPlan bool) ([]*data.Layer, error) {

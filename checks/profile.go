@@ -2,10 +2,11 @@ package checks
 
 import (
 	"fmt"
-	"guacamole/data"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/padok-team/guacamole/data"
 
 	"github.com/fatih/color"
 	"golang.org/x/exp/slices"

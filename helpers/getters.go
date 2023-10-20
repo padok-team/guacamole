@@ -2,11 +2,12 @@ package helpers
 
 import (
 	"fmt"
-	"guacamole/data"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/padok-team/guacamole/data"
 
 	"github.com/spf13/viper"
 )

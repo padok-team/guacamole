@@ -1,8 +1,9 @@
 package checks
 
 import (
-	"guacamole/data"
 	"sync"
+
+	"github.com/padok-team/guacamole/data"
 
 	"golang.org/x/exp/slices"
 )

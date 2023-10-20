@@ -1,4 +1,4 @@
-module guacamole
+module github.com/padok-team/guacamole
 
 go 1.20
 
