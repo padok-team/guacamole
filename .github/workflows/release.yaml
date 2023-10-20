@@ -34,6 +34,11 @@ jobs:
           RELEASE_NAME=guacamole@${VERSION#v}
           echo "RELEASE_NAME=${RELEASE_NAME%-*}" >> $GITHUB_ENV
 
+          echo $RELEASE_NAME
+          echo $BUILD_TIMESTAMP
+          echo $VERSION
+          echo $COMMIT_HASH
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
