@@ -8,7 +8,7 @@ builds:
     ldflags:
       - -X "github.com/padok-team/guacamole/internal/version.Version={{.Env.VERSION}}"
       - -X "github.com/padok-team/guacamole/internal/version.CommitHash={{.Env.COMMIT_HASH}}"
-      - -X "github.com/padok-team/guacamole/internal/version.BuildTimestamp={{.Env.COMMIT_HASH}}"
+      - -X "github.com/padok-team/guacamole/internal/version.BuildTimestamp={{.Env.BUILD_TIMESTAMP}}"
     goos:
       - linux
     main: ./
