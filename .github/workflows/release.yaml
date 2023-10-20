@@ -30,7 +30,7 @@ jobs:
           echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
           echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
-          echo "RELEASE_NAME="guacamole@${VERSION}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=guacamole@${VERSION}" >> $GITHUB_ENV
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
