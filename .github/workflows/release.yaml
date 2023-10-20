@@ -30,7 +30,7 @@ jobs:
           echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
           echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
-          # Remove the v prefix from the version and the -<number> suffix from the release candidate version
+          # Remove the v prefix from the version and the -rc<number> suffix from the release candidate version
           RELEASE_NAME=guacamole@${VERSION#v}
           echo "RELEASE_NAME=${RELEASE_NAME%-*}" >> $GITHUB_ENV
 
@@ -45,3 +45,7 @@ jobs:
           # This token was created by cterence on 20/10/2023 to allow goreleaser to push to the homebrew tap
           # Read : https://goreleaser.com/errors/resource-not-accessible-by-integration/#learning-more
           HOMEBREW_PAT: ${{ secrets.HOMEBREW_PAT }}
+          RELEASE_NAME: ${{ env.RELEASE_NAME }}
+          BUILD_TIMESTAMP: ${{ env.BUILD_TIMESTAMP }}
+          VERSION: ${{ env.VERSION }}
+          COMMIT_HASH: ${{ env.COMMIT_HASH }}
