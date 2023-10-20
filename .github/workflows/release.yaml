@@ -27,12 +27,20 @@ jobs:
 
       - name: Get ldflags env values
         run: |
+          VERSION=${{ github.ref_name }}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
-          echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
           # Remove the v prefix from the version and the -rc<number> suffix from the release candidate version
           RELEASE_NAME=guacamole@${VERSION#v}
           echo "RELEASE_NAME=${RELEASE_NAME%-*}" >> $GITHUB_ENV
+
+      - name: Check env variables
+        run: |
+          echo "BUILD_TIMESTAMP=$BUILD_TIMESTAMP"
+          echo "VERSION=$VERSION"
+          echo "COMMIT_HASH=$COMMIT_HASH"
+          echo "RELEASE_NAME=$RELEASE_NAME"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
