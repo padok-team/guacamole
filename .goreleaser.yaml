@@ -11,6 +11,8 @@ builds:
       - -X "github.com/padok-team/guacamole/internal/version.BuildTimestamp={{.Env.BUILD_TIMESTAMP}}"
     goos:
       - linux
+      - windows
+      - darwin
     main: ./
     binary: guacamole
 archives:
