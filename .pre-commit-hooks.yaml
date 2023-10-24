@@ -1,0 +1,5 @@
+- id: guacamole_static
+  name: Guacamole static
+  description: Run guacamole static quality checks
+  entry: guacamole
+  language: golang
