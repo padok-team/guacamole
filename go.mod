@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20230925220900-5a6f8d18746d
 	github.com/hashicorp/terraform-exec v0.19.0
 	github.com/hashicorp/terraform-json v0.17.1
-	github.com/jedib0t/go-pretty/v6 v6.4.8
+	github.com/jedib0t/go-pretty/v6 v6.4.9
 	github.com/savioxavier/termlink v1.3.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.17.0
