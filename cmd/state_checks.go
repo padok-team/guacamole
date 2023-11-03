@@ -39,6 +39,10 @@ var state = &cobra.Command{
 			}
 			checkResults := checks.StateChecks(layers)
 			helpers.RenderChecks(checkResults, verbose)
+			// If there is at least one error, exit with code 1
+			if helpers.HasError(checkResults) {
+				os.Exit(1)
+			}
 		} else {
 			l.Println("Aborting...")
 		}
