@@ -91,3 +91,7 @@ A verbose mode (`-v`) exists to add more infos to the output.
 ### State
 
 - `TF_MOD_004` - Use for_each to create multiple resources of the same type
+
+## License
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
