@@ -8,7 +8,7 @@ Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-gui
 
 ### With Homebrew
 
-> :information: If you use Linux, you can install [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux)
+> :information_source: If you use Linux, you can install [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux)
 
 :warning: A GitHub PAT is required because Guacamole is a private repository for the moment.
 
