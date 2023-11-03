@@ -29,7 +29,7 @@ func RemoteModuleVersion() (data.Check, error) {
 	// Example: v1.2.3
 	versionMatcher := regexp.MustCompile(`^v?\d+\.\d+\.\d+(-\w+)?$`)
 	// Regex matcher for git repository link with a tag
-	gitRefMatcher := regexp.MustCompile(`^git.+\.git.*\?ref=.*$`)
+	gitRefMatcher := regexp.MustCompile(`^git.+\?ref=.*$`)
 
 	for _, module := range modules {
 		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
