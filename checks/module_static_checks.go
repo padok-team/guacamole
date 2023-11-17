@@ -4,13 +4,14 @@ import (
 	"sync"
 
 	"github.com/padok-team/guacamole/data"
+	"github.com/padok-team/guacamole/helpers"
 
 	"golang.org/x/exp/slices"
 )
 
 func ModuleStaticChecks() []data.Check {
 	// Add static checks here
-	checks := map[string]func() (data.Check, error){
+	checks := map[string]func(m []data.TerraformModule) (data.Check, error){
 		"ProviderInModule":       ProviderInModule,
 		"Stuttering":             Stuttering,
 		"SnakeCase":              SnakeCase,
@@ -24,6 +25,12 @@ func ModuleStaticChecks() []data.Check {
 
 	var checkResults []data.Check
 
+	// Find recusively all the modules in the current directory
+	modules, whitelistComments, err := helpers.GetModules()
+	if err != nil {
+		panic(err)
+	}
+
 	wg := new(sync.WaitGroup)
 	wg.Add(len(checks))
 
@@ -31,10 +38,10 @@ func ModuleStaticChecks() []data.Check {
 	defer close(c)
 
 	for _, checkFunction := range checks {
-		go func(checkFunction func() (data.Check, error)) {
+		go func(checkFunction func(m []data.TerraformModule) (data.Check, error)) {
 			defer wg.Done()
 
-			check, err := checkFunction()
+			check, err := checkFunction(modules)
 			if err != nil {
 				panic(err)
 			}

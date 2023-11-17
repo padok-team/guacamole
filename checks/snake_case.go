@@ -5,12 +5,11 @@ import (
 	"strconv"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func SnakeCase() (data.Check, error) {
+func SnakeCase(modules []data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_NAM_002",
 		Name:              "snake_case should be used for all resource names",
@@ -18,10 +17,6 @@ func SnakeCase() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
 	namesInError := []string{}
 
 	pattern := `^[a-z0-9_]+$`

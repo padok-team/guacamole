@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,9 +13,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-func GetModules() ([]data.TerraformModule, error) {
+func GetModules() ([]data.TerraformModule, []data.WhitelistComment, error) {
 	codebasePath := viper.GetString("codebase-path")
 	modules := []data.TerraformModule{}
+	whitelistComments := []data.WhitelistComment{}
 	//Get all subdirectories in root path
 	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -34,12 +36,36 @@ func GetModules() ([]data.TerraformModule, error) {
 				}
 				if !alreadyInList {
 					modules = append(modules, module)
+					// Parse the file to get comments
+					file, err := os.Open(path)
+					if err != nil {
+						return fmt.Errorf("failed to open file: %w", err)
+					}
+					defer file.Close()
+					// Read the file and find comments containing guacamole-ignore
+					scanner := bufio.NewScanner(file)
+					i := 1
+					for scanner.Scan() {
+						line := scanner.Text()
+						if strings.Contains(line, "guacamole-ignore") {
+							whitelistComment := data.WhitelistComment{}
+							// Regex to match the check ID in the form of TF/TG_XXX_0XX
+							regexp := regexp.MustCompile(`(T[F|G]_(\w+)_\d+)`)
+							match := regexp.FindStringSubmatch(line)
+							if len(match) > 0 {
+								whitelistComment.CheckID = match[0]
+								whitelistComment.LineNumber = i
+							}
+							whitelistComments = append(whitelistComments, whitelistComment)
+						}
+						i++
+					}
 				}
 			}
 		}
 		return nil
 	})
-	return modules, err
+	return modules, whitelistComments, err
 }
 
 func GetLayers() ([]*data.Layer, error) {
