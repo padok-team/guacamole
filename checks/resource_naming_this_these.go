@@ -4,13 +4,12 @@ import (
 	"strconv"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func ResourceNamingThisThese() (data.Check, error) {
+func ResourceNamingThisThese(modules []data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_NAM_001",
 		Name:              "Resources and datasources in modules should be named \"this\" or \"these\" if their type is unique",
@@ -20,10 +19,6 @@ func ResourceNamingThisThese() (data.Check, error) {
 
 	resourcesInError := []string{}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
 	pluralize := pluralize.NewClient()
 
 	for _, module := range modules {

@@ -4,12 +4,11 @@ import (
 	"strconv"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func VarContainsDescription() (data.Check, error) {
+func VarContainsDescription(modules []data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_VAR_001",
 		Name:              "Variable should contain a description",
@@ -17,10 +16,6 @@ func VarContainsDescription() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
 	variablesInError := []string{}
 
 	// For each module, check if the provider is defined

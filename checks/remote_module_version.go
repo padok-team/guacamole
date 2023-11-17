@@ -6,12 +6,11 @@ import (
 	"strings"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func RemoteModuleVersion() (data.Check, error) {
+func RemoteModuleVersion(modules []data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_MOD_001",
 		Name:              "Remote module call should be pinned to a specific version",
@@ -19,10 +18,6 @@ func RemoteModuleVersion() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
 	modulesInError := []string{}
 
 	// Regex versionMatcher that matches a specific version number

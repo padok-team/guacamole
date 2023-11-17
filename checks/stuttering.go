@@ -5,12 +5,11 @@ import (
 	"strings"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func Stuttering() (data.Check, error) {
+func Stuttering(modules []data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_NAM_003",
 		Name:              "Stuttering in the naming of resources",
@@ -18,10 +17,6 @@ func Stuttering() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
 	namesInError := []string{}
 	// For each module, check if the provider is defined
 	for _, module := range modules {
