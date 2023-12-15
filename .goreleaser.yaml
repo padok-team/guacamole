@@ -49,8 +49,6 @@ brews:
   # Post latest version
   - name: guacamole
     homepage: https://github.com/padok-team/guacamole
-    download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
-    custom_require: download_strategy
     repository:
       owner: padok-team
       name: homebrew-tap
@@ -58,8 +56,6 @@ brews:
   # Post tagged version because alternative_names configuration is only for goreleaser pro version
   - name: "{{ .Env.RELEASE_NAME }}"
     homepage: https://github.com/padok-team/guacamole
-    download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
-    custom_require: download_strategy
     repository:
       owner: padok-team
       name: homebrew-tap
