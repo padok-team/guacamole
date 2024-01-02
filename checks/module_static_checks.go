@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/padok-team/guacamole/data"
@@ -42,6 +43,22 @@ func ModuleStaticChecks() []data.Check {
 			defer wg.Done()
 
 			check, err := checkFunction(modules)
+			// Create temporary slice because we may be deleting some elements from the original
+			// Compare checks and their possible whitelisting via comments
+			// for _, checkError := range check.Errors {
+			for i := len(check.Errors) - 1; i >= 0; i-- {
+				for _, whitelisterror := range whitelistComments {
+					// We check the line number +1 because the comment is always above the code block
+					if strings.Contains(check.Errors[i].Path, whitelisterror.Path) && check.Errors[i].LineNumber < whitelisterror.LineNumber+4 && check.ID == whitelisterror.CheckID {
+						check.Errors = append(check.Errors[:i], check.Errors[i+1:]...)
+						break
+					}
+				}
+			}
+			// Replace the check error with the array after whitelisting
+			if len(check.Errors) == 0 {
+				check.Status = "✅"
+			}
 			if err != nil {
 				panic(err)
 			}

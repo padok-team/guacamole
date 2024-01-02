@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/padok-team/guacamole/data"
@@ -18,7 +17,7 @@ func VarNumberMatchesType(modules []data.TerraformModule) (data.Check, error) {
 		Status:            "✅",
 	}
 
-	variablesInError := []string{}
+	variablesInError := []data.Error{}
 
 	// For each module, check if the provider is defined
 	for _, module := range modules {
@@ -37,7 +36,11 @@ func VarNumberMatchesType(modules []data.TerraformModule) (data.Check, error) {
 			variable.Type = strings.ReplaceAll(variable.Type, " ", "")
 
 			if isCollection && !pluralize.IsPlural(variable.Name) {
-				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name)
+				variablesInError = append(variablesInError, data.Error{
+					Path:        variable.Pos.Filename,
+					LineNumber:  variable.Pos.Line,
+					Description: variable.Name,
+				})
 			}
 		}
 	}
