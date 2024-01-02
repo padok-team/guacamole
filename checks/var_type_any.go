@@ -2,7 +2,6 @@ package checks
 
 import (
 	"regexp"
-	"strconv"
 
 	"github.com/padok-team/guacamole/data"
 
@@ -17,7 +16,7 @@ func VarTypeAny(modules []data.TerraformModule) (data.Check, error) {
 		Status:            "✅",
 	}
 
-	variablesInError := []string{}
+	variablesInError := []data.Error{}
 
 	// Regex to match type any in variables even with spaces and newlines
 	matcher := regexp.MustCompile(`any`)
@@ -31,7 +30,11 @@ func VarTypeAny(modules []data.TerraformModule) (data.Check, error) {
 
 		for _, variable := range moduleConf.Variables {
 			if matcher.MatchString(variable.Type) {
-				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name)
+				variablesInError = append(variablesInError, data.Error{
+					Path:        variable.Pos.Filename,
+					LineNumber:  variable.Pos.Line,
+					Description: variable.Name,
+				})
 			}
 		}
 	}

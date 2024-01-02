@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/padok-team/guacamole/data"
@@ -17,7 +16,7 @@ func Stuttering(modules []data.TerraformModule) (data.Check, error) {
 		Status:            "✅",
 	}
 
-	namesInError := []string{}
+	namesInError := []data.Error{}
 	// For each module, check if the provider is defined
 	for _, module := range modules {
 		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
@@ -28,21 +27,33 @@ func Stuttering(modules []data.TerraformModule) (data.Check, error) {
 		for _, resource := range moduleConf.ManagedResources {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 			if containsWord(resource.Name, resource.Type) {
-				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
+				namesInError = append(namesInError, data.Error{
+					Path:        resource.Pos.Filename,
+					LineNumber:  resource.Pos.Line,
+					Description: resource.MapKey(),
+				})
 			}
 		}
 
 		for _, resource := range moduleConf.DataResources {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 			if containsWord(resource.Name, resource.Type) {
-				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
+				namesInError = append(namesInError, data.Error{
+					Path:        resource.Pos.Filename,
+					LineNumber:  resource.Pos.Line,
+					Description: resource.MapKey(),
+				})
 			}
 		}
 
 		for _, resource := range moduleConf.ModuleCalls {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 			if containsWord(resource.Name, "module") {
-				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.Name)
+				namesInError = append(namesInError, data.Error{
+					Path:        resource.Pos.Filename,
+					LineNumber:  resource.Pos.Line,
+					Description: resource.Name,
+				})
 			}
 		}
 	}

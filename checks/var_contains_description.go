@@ -1,8 +1,6 @@
 package checks
 
 import (
-	"strconv"
-
 	"github.com/padok-team/guacamole/data"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -16,7 +14,7 @@ func VarContainsDescription(modules []data.TerraformModule) (data.Check, error) 
 		Status:            "✅",
 	}
 
-	variablesInError := []string{}
+	variablesInError := []data.Error{}
 
 	// For each module, check if the provider is defined
 	for _, module := range modules {
@@ -31,7 +29,11 @@ func VarContainsDescription(modules []data.TerraformModule) (data.Check, error) 
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 
 			if variable.Description == "" {
-				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name)
+				variablesInError = append(variablesInError, data.Error{
+					Path:        variable.Pos.Filename,
+					LineNumber:  variable.Pos.Line,
+					Description: variable.Name,
+				})
 			}
 		}
 	}

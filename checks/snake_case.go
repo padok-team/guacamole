@@ -2,7 +2,6 @@ package checks
 
 import (
 	"regexp"
-	"strconv"
 
 	"github.com/padok-team/guacamole/data"
 
@@ -17,7 +16,7 @@ func SnakeCase(modules []data.TerraformModule) (data.Check, error) {
 		Status:            "✅",
 	}
 
-	namesInError := []string{}
+	namesInError := []data.Error{}
 
 	pattern := `^[a-z0-9_]+$`
 	matcher, err := regexp.Compile(pattern)
@@ -37,7 +36,11 @@ func SnakeCase(modules []data.TerraformModule) (data.Check, error) {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 			matched := matcher.MatchString(resource.Name)
 			if !matched {
-				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
+				namesInError = append(namesInError, data.Error{
+					Path:        resource.Pos.Filename,
+					LineNumber:  resource.Pos.Line,
+					Description: resource.MapKey(),
+				})
 			}
 		}
 
@@ -45,7 +48,11 @@ func SnakeCase(modules []data.TerraformModule) (data.Check, error) {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 			matched := matcher.MatchString(resource.Name)
 			if !matched {
-				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.MapKey())
+				namesInError = append(namesInError, data.Error{
+					Path:        resource.Pos.Filename,
+					LineNumber:  resource.Pos.Line,
+					Description: resource.MapKey(),
+				})
 			}
 		}
 
@@ -53,7 +60,11 @@ func SnakeCase(modules []data.TerraformModule) (data.Check, error) {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 			matched := matcher.MatchString(resource.Name)
 			if !matched {
-				namesInError = append(namesInError, resource.Pos.Filename+":"+strconv.Itoa(resource.Pos.Line)+" --> "+resource.Name)
+				namesInError = append(namesInError, data.Error{
+					Path:        resource.Pos.Filename,
+					LineNumber:  resource.Pos.Line,
+					Description: resource.Name,
+				})
 			}
 		}
 	}

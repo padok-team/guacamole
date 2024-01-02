@@ -18,7 +18,7 @@ func RemoteModuleVersion(modules []data.TerraformModule) (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modulesInError := []string{}
+	modulesInError := []data.Error{}
 
 	// Regex versionMatcher that matches a specific version number
 	// Example: v1.2.3
@@ -39,7 +39,11 @@ func RemoteModuleVersion(modules []data.TerraformModule) (data.Check, error) {
 				if strings.HasPrefix(moduleCall.Source, "git") {
 					// If the module comes from a git repository, check if the version is a tag
 					if !gitRefMatcher.MatchString(moduleCall.Source) {
-						modulesInError = append(modulesInError, moduleCall.Pos.Filename+":"+strconv.Itoa(moduleCall.Pos.Line)+" --> "+moduleCall.Name)
+						modulesInError = append(modulesInError, data.Error{
+							Path:        moduleCall.Pos.Filename,
+							LineNumber:  moduleCall.Pos.Line,
+							Description: moduleCall.Name,
+						})
 					}
 				} else {
 					if !versionMatcher.MatchString(moduleCall.Version) {
@@ -47,7 +51,11 @@ func RemoteModuleVersion(modules []data.TerraformModule) (data.Check, error) {
 						if moduleCall.Version != "" {
 							checkString += " / " + moduleCall.Version
 						}
-						modulesInError = append(modulesInError, checkString)
+						modulesInError = append(modulesInError, data.Error{
+							Path:        moduleCall.Pos.Filename,
+							LineNumber:  moduleCall.Pos.Line,
+							Description: moduleCall.Name,
+						})
 					}
 				}
 			}

@@ -16,7 +16,7 @@ func RequiredProviderVersionOperatorInModules(modules []data.TerraformModule) (d
 		Status:            "✅",
 	}
 
-	requiredProvidersInError := []string{}
+	requiredProvidersInError := []data.Error{}
 
 	pattern := `~>`
 	matcher, err := regexp.Compile(pattern)
@@ -35,7 +35,11 @@ func RequiredProviderVersionOperatorInModules(modules []data.TerraformModule) (d
 			for _, versionConstraint := range requiredProvider.VersionConstraints {
 				matched := matcher.MatchString(versionConstraint)
 				if !matched {
-					requiredProvidersInError = append(requiredProvidersInError, requiredProvider.Source+" --> "+versionConstraint)
+					requiredProvidersInError = append(requiredProvidersInError, data.Error{
+						Path:        module.FullPath + requiredProvider.Source,
+						LineNumber:  -1,
+						Description: requiredProvider.Source + " --> " + versionConstraint,
+					})
 				}
 			}
 		}

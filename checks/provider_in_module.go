@@ -14,7 +14,7 @@ func ProviderInModule(modules []data.TerraformModule) (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modulesInError := []string{}
+	modulesInError := []data.Error{}
 	// For each module, check if the provider is defined
 	for _, module := range modules {
 		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
@@ -23,7 +23,11 @@ func ProviderInModule(modules []data.TerraformModule) (data.Check, error) {
 		}
 		//If the module has no provider, display an error
 		if len(moduleConf.ProviderConfigs) > 0 {
-			modulesInError = append(modulesInError, module.FullPath)
+			modulesInError = append(modulesInError, data.Error{
+				Path:        module.FullPath,
+				LineNumber:  -1,
+				Description: "",
+			})
 		}
 	}
 
