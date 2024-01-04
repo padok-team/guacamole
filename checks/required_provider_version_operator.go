@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func RequiredProviderVersionOperatorInModules(modules []data.TerraformModule) (data.Check, error) {
+func RequiredProviderVersionOperatorInModules(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_MOD_003",
 		Name:              "Required provider versions in modules should be set with ~> operator",

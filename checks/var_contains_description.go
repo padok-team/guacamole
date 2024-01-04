@@ -2,11 +2,9 @@ package checks
 
 import (
 	"github.com/padok-team/guacamole/data"
-
-	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func VarContainsDescription(modules []data.TerraformModule) (data.Check, error) {
+func VarContainsDescription(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_VAR_001",
 		Name:              "Variable should contain a description",
@@ -18,16 +16,10 @@ func VarContainsDescription(modules []data.TerraformModule) (data.Check, error) 
 
 	// For each module, check if the provider is defined
 	for _, module := range modules {
-		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
-
-		if diags.HasErrors() {
-			return data.Check{}, diags.Err()
-		}
-
+		moduleConf := module.ModuleConfig
 		// Check if the name of the resource is not in snake case
 		for _, variable := range moduleConf.Variables {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
-
 			if variable.Description == "" {
 				variablesInError = append(variablesInError, data.Error{
 					Path:        variable.Pos.Filename,

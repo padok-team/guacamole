@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func VarNumberMatchesType(modules []data.TerraformModule) (data.Check, error) {
+func VarNumberMatchesType(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_NAM_004",
 		Name:              "Variable name's number should match its type",

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func RemoteModuleVersion(modules []data.TerraformModule) (data.Check, error) {
+func RemoteModuleVersion(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_MOD_001",
 		Name:              "Remote module call should be pinned to a specific version",

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func VarTypeAny(modules []data.TerraformModule) (data.Check, error) {
+func VarTypeAny(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_VAR_002",
 		Name:              "Variable should declare a specific type",

@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func ProviderInModule(modules []data.TerraformModule) (data.Check, error) {
+func ProviderInModule(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_MOD_002",
 		Name:              "Provider should be defined by the consumer of the module",

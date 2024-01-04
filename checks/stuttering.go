@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func Stuttering(modules []data.TerraformModule) (data.Check, error) {
+func Stuttering(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_NAM_003",
 		Name:              "Stuttering in the naming of resources",
