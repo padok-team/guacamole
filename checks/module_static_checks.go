@@ -12,7 +12,7 @@ import (
 
 func ModuleStaticChecks() []data.Check {
 	// Add static checks here
-	checks := map[string]func(m []data.TerraformModule) (data.Check, error){
+	checks := map[string]func(m map[string]data.TerraformModule) (data.Check, error){
 		"ProviderInModule":       ProviderInModule,
 		"Stuttering":             Stuttering,
 		"SnakeCase":              SnakeCase,
@@ -27,7 +27,7 @@ func ModuleStaticChecks() []data.Check {
 	var checkResults []data.Check
 
 	// Find recusively all the modules in the current directory
-	modules, whitelistComments, err := helpers.GetModules()
+	modules, err := helpers.GetModules()
 	if err != nil {
 		panic(err)
 	}
@@ -39,18 +39,27 @@ func ModuleStaticChecks() []data.Check {
 	defer close(c)
 
 	for _, checkFunction := range checks {
-		go func(checkFunction func(m []data.TerraformModule) (data.Check, error)) {
+		go func(checkFunction func(m map[string]data.TerraformModule) (data.Check, error)) {
 			defer wg.Done()
 
 			check, err := checkFunction(modules)
-			// Create temporary slice because we may be deleting some elements from the original
-			// Compare checks and their possible whitelisting via comments
-			// for _, checkError := range check.Errors {
+			// Apply whitelist
 			for i := len(check.Errors) - 1; i >= 0; i-- {
-				for _, whitelisterror := range whitelistComments {
-					// We check the line number +1 because the comment is always above the code block
-					if strings.Contains(check.Errors[i].Path, whitelisterror.Path) && check.Errors[i].LineNumber < whitelisterror.LineNumber+4 && check.ID == whitelisterror.CheckID {
-						check.Errors = append(check.Errors[:i], check.Errors[i+1:]...)
+				whitelistFound := false
+				for _, module := range modules {
+					for _, resource := range module.Resources {
+						for _, whitelist := range resource.WhitelistComments {
+							if strings.Contains(check.Errors[i].Path, resource.FilePath) && check.Errors[i].LineNumber == resource.Pos && check.ID == whitelist.CheckID {
+								check.Errors = append(check.Errors[:i], check.Errors[i+1:]...)
+								whitelistFound = true
+								break
+							}
+						}
+						if whitelistFound {
+							break
+						}
+					}
+					if whitelistFound {
 						break
 					}
 				}

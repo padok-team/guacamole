@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func ResourceNamingThisThese(modules []data.TerraformModule) (data.Check, error) {
+func ResourceNamingThisThese(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_NAM_001",
 		Name:              "Resources and datasources in modules should be named \"this\" or \"these\" if their type is unique",
