@@ -36,7 +36,7 @@ func IterateUseForEach(layers []*data.Layer) (data.Check, error) {
 
 	var checkableLayers []*data.Layer
 
-	var allCheckErrors []string
+	var allCheckErrors []data.Error
 
 	for _, layer := range layers {
 		if layer.RootModule != nil {
@@ -44,7 +44,7 @@ func IterateUseForEach(layers []*data.Layer) (data.Check, error) {
 		}
 	}
 
-	c := make(chan []string, len(checkableLayers))
+	c := make(chan []data.Error, len(checkableLayers))
 
 	wg := new(sync.WaitGroup)
 	wg.Add(len(checkableLayers))
@@ -72,8 +72,8 @@ func IterateUseForEach(layers []*data.Layer) (data.Check, error) {
 	return dataCheck, nil
 }
 
-func checkModules(layerAddress string, m *data.Module) []string {
-	var checkErrors []string
+func checkModules(layerAddress string, m *data.Module) []data.Error {
+	var checkErrors []data.Error
 
 	if len(m.ObjectTypes) > 0 {
 		for _, o := range m.ObjectTypes {
@@ -82,7 +82,12 @@ func checkModules(layerAddress string, m *data.Module) []string {
 			// If it's an int, we can assume that the resource was created with count
 			case json.Number:
 				if o.Count > 1 {
-					checkErrors = append(checkErrors, "[layer] "+layerAddress+" --> [module] "+m.Address+" --> [resource] "+o.Type+" ("+strconv.Itoa(o.Count)+")")
+					checkErrors = append(checkErrors, data.Error{
+						Path:        layerAddress,
+						LineNumber:  -1,
+						Description: "[module] " + m.Address + " --> [resource] " + o.Type + " (" + strconv.Itoa(o.Count) + ")",
+					})
+
 				}
 			}
 		}

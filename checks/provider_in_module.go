@@ -2,12 +2,11 @@ package checks
 
 import (
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func ProviderInModule() (data.Check, error) {
+func ProviderInModule(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_MOD_002",
 		Name:              "Provider should be defined by the consumer of the module",
@@ -15,12 +14,7 @@ func ProviderInModule() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	// Find recusively all the modules in the current directory
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
-	modulesInError := []string{}
+	modulesInError := []data.Error{}
 	// For each module, check if the provider is defined
 	for _, module := range modules {
 		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
@@ -29,7 +23,11 @@ func ProviderInModule() (data.Check, error) {
 		}
 		//If the module has no provider, display an error
 		if len(moduleConf.ProviderConfigs) > 0 {
-			modulesInError = append(modulesInError, module.FullPath)
+			modulesInError = append(modulesInError, data.Error{
+				Path:        module.FullPath,
+				LineNumber:  -1,
+				Description: "",
+			})
 		}
 	}
 
