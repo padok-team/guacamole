@@ -8,18 +8,10 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func StaticChecks() []data.Check {
+func LayerStaticChecks() []data.Check {
 	// Add static checks here
 	checks := map[string]func() (data.Check, error){
-		"ProviderInModule":       ProviderInModule,
-		"Stuttering":             Stuttering,
-		"SnakeCase":              SnakeCase,
-		"VarContainsDescription": VarContainsDescription,
-		"VarNumberMatchesType":   VarNumberMatchesType,
-		"VarTypeAny":             VarTypeAny,
-		"RemoteModuleVersion":    RemoteModuleVersion,
-		"RequiredProviderVersionOperatorInModules": RequiredProviderVersionOperatorInModules,
-		"ResourceNamingThisThese":                  ResourceNamingThisThese,
+		"Dry": Dry,
 	}
 
 	var checkResults []data.Check

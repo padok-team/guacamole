@@ -26,7 +26,7 @@ func All(layers []*data.Layer) []data.Check {
 
 	go func() {
 		defer wg.Done()
-		c <- StaticChecks()
+		c <- ModuleStaticChecks()
 	}()
 
 	wg.Wait()
