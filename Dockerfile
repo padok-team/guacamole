@@ -1,5 +1,5 @@
 # Build the guacamole binary
-FROM docker.io/library/golang:1.20.10@sha256:8a3e8d1d3a513c0155451c522d381e901837610296f5a077b19f3d350b3a1585 as builder
+FROM docker.io/library/golang:1.21.6@sha256:76aadd914a29a2ee7a6b0f3389bb2fdb87727291d688e1d972abe6c0fa6f2ee0 as builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/guacamole
