@@ -65,6 +65,7 @@ func findFilesInLayers(path string) ([]string, error) {
 	files := []string{}
 	// Create new terragrunt option scoped to the file we are scanning
 	options, _ := options.NewTerragruntOptionsWithConfigPath(path)
+	options.OriginalTerragruntConfigPath = path
 	// Parse the file with PartialParseConfigFile which parse all essential block, in our case local and include
 	// https://github.com/gruntwork-io/terragrunt/blob/master/config/config_partial.go#L147
 	terragruntConfig, err := config.PartialParseConfigFile(path, options, nil, []config.PartialDecodeSectionType{
@@ -72,14 +73,14 @@ func findFilesInLayers(path string) ([]string, error) {
 		config.DependencyBlock,
 	})
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error parsing file", err.Error())
 		return files, err
 	}
 	// Add initial terragrunt.hcl file
 	files = append(files, path)
 	// Add all includes files
 	for _, i := range terragruntConfig.ProcessedIncludes {
-		if strings.HasPrefix(i.Path, ".") {
+		if strings.HasPrefix(i.Path, ".") || !strings.HasPrefix(i.Path, "/") {
 			// Convert relative path to absolute
 			files = append(files, filepath.Clean(filepath.Dir(path)+"/"+i.Path))
 		} else {
