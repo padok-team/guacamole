@@ -20,7 +20,7 @@ func Dry() (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TG_DRY_001",
 		Name:              "No duplicate inputs within a layer",
-		RelatedGuidelines: "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terragrunt/context_pattern.md#%EF%B8%8F-context",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html#%EF%B8%8F-context",
 		Status:            "✅",
 	}
 	codebasePath := viper.GetString("codebase-path")
