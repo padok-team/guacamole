@@ -34,7 +34,7 @@ func Dry() (data.Check, error) {
 		return dataCheck, err
 	}
 
-	duplicates := []string{}
+	duplicates := []data.Error{}
 	for _, layer := range layers {
 		// Get all files that are included with Terragrunt include block
 		files, _ := findFilesInLayers(layer)
@@ -47,8 +47,11 @@ func Dry() (data.Check, error) {
 					return dataCheck, err
 				}
 				for key, f := range findings {
-					errmsg := "Duplicate in file " + combination[0] + " and " + combination[1] + " --> " + key + ":" + f
-					duplicates = append(duplicates, errmsg)
+					duplicates = append(duplicates, data.Error{
+						Path:        combination[0] + " and " + combination[1],
+						LineNumber:  -1,
+						Description: key + ":" + f,
+					})
 				}
 			}
 		}
