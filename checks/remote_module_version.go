@@ -6,12 +6,11 @@ import (
 	"strings"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func RemoteModuleVersion() (data.Check, error) {
+func RemoteModuleVersion(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_MOD_001",
 		Name:              "Remote module call should be pinned to a specific version",
@@ -19,11 +18,7 @@ func RemoteModuleVersion() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
-	modulesInError := []string{}
+	modulesInError := []data.Error{}
 
 	// Regex versionMatcher that matches a specific version number
 	// Example: v1.2.3
@@ -44,7 +39,11 @@ func RemoteModuleVersion() (data.Check, error) {
 				if strings.HasPrefix(moduleCall.Source, "git") {
 					// If the module comes from a git repository, check if the version is a tag
 					if !gitRefMatcher.MatchString(moduleCall.Source) {
-						modulesInError = append(modulesInError, moduleCall.Pos.Filename+":"+strconv.Itoa(moduleCall.Pos.Line)+" --> "+moduleCall.Name)
+						modulesInError = append(modulesInError, data.Error{
+							Path:        moduleCall.Pos.Filename,
+							LineNumber:  moduleCall.Pos.Line,
+							Description: moduleCall.Name,
+						})
 					}
 				} else {
 					if !versionMatcher.MatchString(moduleCall.Version) {
@@ -52,7 +51,11 @@ func RemoteModuleVersion() (data.Check, error) {
 						if moduleCall.Version != "" {
 							checkString += " / " + moduleCall.Version
 						}
-						modulesInError = append(modulesInError, checkString)
+						modulesInError = append(modulesInError, data.Error{
+							Path:        moduleCall.Pos.Filename,
+							LineNumber:  moduleCall.Pos.Line,
+							Description: moduleCall.Name,
+						})
 					}
 				}
 			}

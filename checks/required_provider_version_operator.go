@@ -4,12 +4,11 @@ import (
 	"regexp"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func RequiredProviderVersionOperatorInModules() (data.Check, error) {
+func RequiredProviderVersionOperatorInModules(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_MOD_003",
 		Name:              "Required provider versions in modules should be set with ~> operator",
@@ -17,11 +16,7 @@ func RequiredProviderVersionOperatorInModules() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
-	requiredProvidersInError := []string{}
+	requiredProvidersInError := []data.Error{}
 
 	pattern := `~>`
 	matcher, err := regexp.Compile(pattern)
@@ -40,7 +35,11 @@ func RequiredProviderVersionOperatorInModules() (data.Check, error) {
 			for _, versionConstraint := range requiredProvider.VersionConstraints {
 				matched := matcher.MatchString(versionConstraint)
 				if !matched {
-					requiredProvidersInError = append(requiredProvidersInError, requiredProvider.Source+" --> "+versionConstraint)
+					requiredProvidersInError = append(requiredProvidersInError, data.Error{
+						Path:        module.FullPath + requiredProvider.Source,
+						LineNumber:  -1,
+						Description: requiredProvider.Source + " --> " + versionConstraint,
+					})
 				}
 			}
 		}

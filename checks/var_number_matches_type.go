@@ -1,17 +1,15 @@
 package checks
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
 
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func VarNumberMatchesType() (data.Check, error) {
+func VarNumberMatchesType(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_NAM_004",
 		Name:              "Variable name's number should match its type",
@@ -19,11 +17,7 @@ func VarNumberMatchesType() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
-	variablesInError := []string{}
+	variablesInError := []data.Error{}
 
 	// For each module, check if the provider is defined
 	for _, module := range modules {
@@ -42,7 +36,11 @@ func VarNumberMatchesType() (data.Check, error) {
 			variable.Type = strings.ReplaceAll(variable.Type, " ", "")
 
 			if isCollection && !pluralize.IsPlural(variable.Name) {
-				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name)
+				variablesInError = append(variablesInError, data.Error{
+					Path:        variable.Pos.Filename,
+					LineNumber:  variable.Pos.Line,
+					Description: variable.Name,
+				})
 			}
 		}
 	}

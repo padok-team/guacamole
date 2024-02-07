@@ -1,16 +1,18 @@
 package checks
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/padok-team/guacamole/data"
+	"github.com/padok-team/guacamole/helpers"
 
 	"golang.org/x/exp/slices"
 )
 
 func ModuleStaticChecks() []data.Check {
 	// Add static checks here
-	checks := map[string]func() (data.Check, error){
+	checks := map[string]func(m map[string]data.TerraformModule) (data.Check, error){
 		"ProviderInModule":       ProviderInModule,
 		"Stuttering":             Stuttering,
 		"SnakeCase":              SnakeCase,
@@ -24,6 +26,12 @@ func ModuleStaticChecks() []data.Check {
 
 	var checkResults []data.Check
 
+	// Find recusively all the modules in the current directory
+	modules, err := helpers.GetModules()
+	if err != nil {
+		panic(err)
+	}
+
 	wg := new(sync.WaitGroup)
 	wg.Add(len(checks))
 
@@ -31,10 +39,18 @@ func ModuleStaticChecks() []data.Check {
 	defer close(c)
 
 	for _, checkFunction := range checks {
-		go func(checkFunction func() (data.Check, error)) {
+		go func(checkFunction func(m map[string]data.TerraformModule) (data.Check, error)) {
 			defer wg.Done()
 
-			check, err := checkFunction()
+			check, err := checkFunction(modules)
+			// Apply whitelist on checks errors
+			for i := len(check.Errors) - 1; i >= 0; i-- {
+				check, _ = applyWhitelist(check, i, modules)
+			}
+			// Replace the check error status with the array after whitelisting
+			if len(check.Errors) == 0 {
+				check.Status = "✅"
+			}
 			if err != nil {
 				panic(err)
 			}
@@ -61,4 +77,18 @@ func ModuleStaticChecks() []data.Check {
 	})
 
 	return checkResults
+}
+
+func applyWhitelist(checks data.Check, indexOfCheckedcheck int, modules map[string]data.TerraformModule) (data.Check, error) {
+	for _, module := range modules {
+		for _, resource := range module.Resources {
+			for _, whitelist := range resource.WhitelistComments {
+				if strings.Contains(checks.Errors[indexOfCheckedcheck].Path, resource.FilePath) && checks.Errors[indexOfCheckedcheck].LineNumber == resource.Pos && checks.ID == whitelist.CheckID {
+					checks.Errors = append(checks.Errors[:indexOfCheckedcheck], checks.Errors[indexOfCheckedcheck+1:]...)
+					return checks, nil
+				}
+			}
+		}
+	}
+	return checks, nil
 }

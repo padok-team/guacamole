@@ -1,15 +1,10 @@
 package checks
 
 import (
-	"strconv"
-
 	"github.com/padok-team/guacamole/data"
-	"github.com/padok-team/guacamole/helpers"
-
-	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
-func VarContainsDescription() (data.Check, error) {
+func VarContainsDescription(modules map[string]data.TerraformModule) (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TF_VAR_001",
 		Name:              "Variable should contain a description",
@@ -17,26 +12,20 @@ func VarContainsDescription() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	modules, err := helpers.GetModules()
-	if err != nil {
-		return data.Check{}, err
-	}
-	variablesInError := []string{}
+	variablesInError := []data.Error{}
 
 	// For each module, check if the provider is defined
 	for _, module := range modules {
-		moduleConf, diags := tfconfig.LoadModule(module.FullPath)
-
-		if diags.HasErrors() {
-			return data.Check{}, diags.Err()
-		}
-
+		moduleConf := module.ModuleConfig
 		// Check if the name of the resource is not in snake case
 		for _, variable := range moduleConf.Variables {
 			// I want to check if the name of the resource contains any word (separated by a dash) of its type
-
 			if variable.Description == "" {
-				variablesInError = append(variablesInError, variable.Pos.Filename+":"+strconv.Itoa(variable.Pos.Line)+" --> "+variable.Name)
+				variablesInError = append(variablesInError, data.Error{
+					Path:        variable.Pos.Filename,
+					LineNumber:  variable.Pos.Line,
+					Description: variable.Name,
+				})
 			}
 		}
 	}
