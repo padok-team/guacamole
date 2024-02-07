@@ -4,17 +4,32 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
+	"log"
+	"os"
 
+	"github.com/padok-team/guacamole/checks"
+	"github.com/padok-team/guacamole/helpers"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // plan represents the run command
 var static = &cobra.Command{
 	Use:   "static",
-	Short: "Run static code checks",
+	Short: "Run static code checks (default: module)",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("You have to specify what you want to check : layer or module")
+		l := log.New(os.Stderr, "", 0)
+		l.Println("You can specify what you want to check : layer or module")
+		l.Println("Defaulting to module check")
+		l.Println("Running static checks on modules...")
+		checkResults := checks.ModuleStaticChecks()
+		// helpers.RenderTable(checkResults)
+		verbose := viper.GetBool("verbose")
+		helpers.RenderChecks(checkResults, verbose)
+		// If there is at least one error, exit with code 1
+		if helpers.HasError(checkResults) {
+			os.Exit(1)
+		}
 	},
 }
 
