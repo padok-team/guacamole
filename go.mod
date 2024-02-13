@@ -9,7 +9,7 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gruntwork-io/terragrunt v0.55.1
-	github.com/hashicorp/hcl/v2 v2.17.0
+	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20231204233900-a34142ec2a72
 	github.com/hashicorp/terraform-exec v0.19.0
 	github.com/hashicorp/terraform-json v0.17.1
