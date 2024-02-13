@@ -12,7 +12,7 @@ func RequiredProviderVersionOperatorInModules(modules map[string]data.TerraformM
 	dataCheck := data.Check{
 		ID:                "TF_MOD_003",
 		Name:              "Required provider versions in modules should be set with ~> operator",
-		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html#required-providers-version-for-modules",
 		Status:            "✅",
 	}
 
