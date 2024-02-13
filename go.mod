@@ -10,7 +10,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gruntwork-io/terragrunt v0.54.12
 	github.com/hashicorp/hcl/v2 v2.17.0
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20230925220900-5a6f8d18746d
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20231204233900-a34142ec2a72
 	github.com/hashicorp/terraform-exec v0.19.0
 	github.com/hashicorp/terraform-json v0.17.1
 	github.com/jedib0t/go-pretty/v6 v6.4.9
