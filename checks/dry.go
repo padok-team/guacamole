@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"context"
 	"fmt"
 	"maps"
 	"path/filepath"
@@ -71,10 +72,12 @@ func findFilesInLayers(path string) ([]string, error) {
 	options.OriginalTerragruntConfigPath = path
 	// Parse the file with PartialParseConfigFile which parse all essential block, in our case local and include
 	// https://github.com/gruntwork-io/terragrunt/blob/master/config/config_partial.go#L147
-	terragruntConfig, err := config.PartialParseConfigFile(path, options, nil, []config.PartialDecodeSectionType{
-		config.DependenciesBlock,
-		config.DependencyBlock,
-	})
+	// terragruntConfig, err := config.PartialParseConfigFile(path, options, nil, []config.PartialDecodeSectionType{
+	// 	config.DependenciesBlock,
+	// 	config.DependencyBlock,
+	// })
+	configContext := config.NewParsingContext(context.Background(), options)
+	terragruntConfig, err := config.PartialParseConfigFile(configContext, path, nil)
 	if err != nil {
 		fmt.Println("Error parsing file", err.Error())
 		return files, err
