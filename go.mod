@@ -12,12 +12,12 @@ require (
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20231204233900-a34142ec2a72
 	github.com/hashicorp/terraform-exec v0.19.0
-	github.com/hashicorp/terraform-json v0.17.1
+	github.com/hashicorp/terraform-json v0.21.0
 	github.com/jedib0t/go-pretty/v6 v6.5.4
 	github.com/savioxavier/termlink v1.3.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/zclconf/go-cty v1.14.0
+	github.com/zclconf/go-cty v1.14.1
 	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
 	golang.org/x/term v0.17.0
 )
