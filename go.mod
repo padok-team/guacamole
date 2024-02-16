@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.5
 
 require (
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
+	github.com/davecgh/go-spew 8991bc29aa16
 	github.com/fatih/color v1.16.0
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/gruntwork-io/terragrunt v0.55.1
