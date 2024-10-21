@@ -16,14 +16,14 @@ import (
 // plan represents the run command
 var static = &cobra.Command{
 	Use:   "static",
-	Short: "Run static code checks (default: module)",
+	Short: "Run static code checks",
 	Run: func(cmd *cobra.Command, args []string) {
 		l := log.New(os.Stderr, "", 0)
 		l.Println("You can specify what you want to check : layer or module")
-		l.Println("Defaulting to module check")
-		l.Println("Running static checks on modules...")
+		l.Println("Defaulting to checking both")
 		checkResults := checks.ModuleStaticChecks()
-		// helpers.RenderTable(checkResults)
+		l.Println("Running static checks on layer...")
+		checkResults = append(checkResults, checks.LayerStaticChecks()...)
 		verbose := viper.GetBool("verbose")
 		helpers.RenderChecks(checkResults, verbose)
 		// If there is at least one error, exit with code 1

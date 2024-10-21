@@ -14,9 +14,11 @@ Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-gui
 brew tap padok-team/tap
 brew install guacamole
 ```
+
 ### From GitHub
 
 **Prerequisites :**
+
 - Golang
 - Terraform
 - Terragrunt
@@ -39,10 +41,13 @@ Three modes currently exist :
   guacamole static -p /path/to/your/codebase
   ```
 
-- [EXPERIMENTAL] State mode : runs quality checks based on your layers' state
-  
-  We recommend to use this command after checking that your codebase has been initialized properly.
+  - By default, it will launch [module](#static-module-check) and [layer](#static-layer-check) checks
+  - To launch [layer](#static-layer-check) check use `guacamole static layer`
+  - To launch [module](#static-module-check) check use `guacamole static module`
 
+- [EXPERIMENTAL] State mode : runs quality checks based on your layers' state
+
+  We recommend using this command after checking that your codebase has been initialized properly.
 
   ```bash
   guacamole state -p /path/to/your/codebase
@@ -50,35 +55,40 @@ Three modes currently exist :
 
 - [EXPERIMENTAL] Profile mode : creates a detailed report of the contents of your codebase
 
-  We recommend to use this command after checking that your codebase has been initialized properly.
+  We recommend using this command after checking that your codebase has been initialized properly.
 
   ```bash
   guacamole profile -p /path/to/your/codebase
   ```
 
-A verbose mode (`-v`) exists to add more infos to the output.
+A verbose mode (`-v`) exists to add more information to the output.
+
+## List of checks
+
+### Static module check for Terraform
+
+- `TF_MOD_001` - [Remote module call should be pinned to a specific version](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html#module-layer-versioning)
+- `TF_MOD_002` - [Provider should be defined by the consumer of the module](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules)
+- `TF_MOD_003` - [Required provider versions in modules should be set with ~> operator](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html#required-providers-version-for-modules)
+- `TF_NAM_001` - [Resources in modules should be named "this" or "these" if their type is unique](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
+- `TF_NAM_002` - [snake_case should be used for all resource names](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
+- `TF_NAM_003` - [Stuttering in the naming of resources](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
+- `TF_NAM_004` - [Variable name's number should match its type](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables)
+- `TF_NAM_005` - [Resources and data sources should not be named \"this\" or \"these\" if there are more than 1 of the same type](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
+- `TF_VAR_001` - [Variable should contain a description](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#variables)
+- `TF_VAR_002` - [Variable should declare a specific type](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-type-any-in-variables)
+
+### Static layer check for Terragrunt
+
+- `TG_DRY_001` - [No duplicate inputs within a layer](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html#%EF%B8%8F-context)
+
+### State
+
+- `TF_MOD_004` - [Use for_each to create multiple resources of the same type](https://padok-team.github.io/docs-terraform-guidelines/terraform/iterate_on_your_resources.html)
 
 ## Demo
 
 ![Demo](/assets/demo.gif)
-
-## List of checks
-
-### Static
-
-- `TF_MOD_001` - Remote module call should be pinned to a specific version
-- `TF_MOD_002` - Provider should be defined by the consumer of the module
-- `TF_MOD_003` - Required provider versions in modules should be set with ~> operator
-- `TF_NAM_001` - Resources and datasources in modules should be named "this" or "these" if their type is unique
-- `TF_NAM_002` - snake_case should be used for all resource names
-- `TF_NAM_003` - Stuttering in the naming of resources
-- `TF_NAM_004` - Variable name's number should match its type
-- `TF_VAR_001` - Variable should contain a description
-- `TF_VAR_002` - Variable should declare a specific type
-
-### State
-
-- `TF_MOD_004` - Use for_each to create multiple resources of the same type
 
 ## License
 

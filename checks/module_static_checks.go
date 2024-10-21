@@ -22,6 +22,7 @@ func ModuleStaticChecks() []data.Check {
 		"RemoteModuleVersion":    RemoteModuleVersion,
 		"RequiredProviderVersionOperatorInModules": RequiredProviderVersionOperatorInModules,
 		"ResourceNamingThisThese":                  ResourceNamingThisThese,
+		"ResourceNaming":                           ResourceNaming,
 	}
 
 	var checkResults []data.Check
