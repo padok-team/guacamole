@@ -63,6 +63,27 @@ Three modes currently exist :
 
 A verbose mode (`-v`) exists to add more information to the output.
 
+**Skipping individual checks**
+
+You can use inline code comments to skip individual checks for a particular resource.
+
+To skip a check on a given Terraform definition block resource, apply the following comment pattern inside its scope: `# guacamole-ignore:<check_id> <suppression_comment>`
+
+    <check_id> is one of the available check scanners.
+    <suppression_comment> is an optional suppression reason.
+
+Example:
+
+The following comment skips the `TF_NAM_001` check on the resource identified by `network`
+
+```bash
+# guacamole-ignore:TF_NAM_001 We will be creating more rg
+resource "azurerm_resource_group" "network" {
+  name...
+```
+
+⚠️ The following checks can't be whitelisted : `TF_MOD_002`
+
 ## List of checks
 
 ### Static module check for Terraform
