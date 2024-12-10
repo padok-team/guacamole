@@ -82,6 +82,8 @@ resource "azurerm_resource_group" "network" {
   name...
 ```
 
+⚠️ The following checks can't be whitelisted : `TF_MOD_002`
+
 ## List of checks
 
 ### Static module check for Terraform
