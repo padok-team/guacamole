@@ -41,9 +41,9 @@ Three modes currently exist :
   guacamole static -p /path/to/your/codebase
   ```
 
-  - By default, it will launch [module](#static-module-check) and [layer](#static-layer-check) checks
-  - To launch [layer](#static-layer-check) check use `guacamole static layer`
-  - To launch [module](#static-module-check) check use `guacamole static module`
+  - By default, it will launch [module](#static-module-check-for-terraform) and [layer](#static-layer-check-for-terragrunt) checks
+  - To launch [layer](#static-layer-check-for-terragrunt) check use `guacamole static layer`
+  - To launch [module](#static-module-check-for-terraform) check use `guacamole static module`
 
 - [EXPERIMENTAL] State mode : runs quality checks based on your layers' state
 
@@ -63,14 +63,16 @@ Three modes currently exist :
 
 A verbose mode (`-v`) exists to add more information to the output.
 
-**Skipping individual checks**
+### Skipping individual checks
 
 You can use inline code comments to skip individual checks for a particular resource.
 
+⚠️ Currently only supports static checks on modules for Terraform ⚠️
+
 To skip a check on a given Terraform definition block resource, apply the following comment pattern inside its scope: `# guacamole-ignore:<check_id> <suppression_comment>`
 
-    <check_id> is one of the available check scanners.
-    <suppression_comment> is an optional suppression reason.
+- <check_id> is one of the available check scanners.
+- <suppression_comment> is an optional suppression reason.
 
 Example:
 
@@ -82,7 +84,16 @@ resource "azurerm_resource_group" "network" {
   name...
 ```
 
-⚠️ The following checks can't be whitelisted : `TF_MOD_002`
+You can also whitelist entire checks in **module** by adding them to a `.guacamoleignore` file at the root of your codebase.
+The format of the file should be: path of the `module - check ID` to ignore.
+
+```bash
+pathtomodule/modules/cloud-run-app TF_MOD_002
+```
+
+This is the only way to whitelist the check `TF_MOD_002`
+
+You can specify the path of the `.guacamoleignore` file with the `-w` flag.
 
 ## List of checks
 

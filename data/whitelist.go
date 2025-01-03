@@ -5,3 +5,8 @@ type WhitelistComment struct {
 	LineNumber int
 	Path       string
 }
+
+type WhitelistModule struct {
+	CheckID    string
+	ModulePath string
+}

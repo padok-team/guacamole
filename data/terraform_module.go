@@ -9,6 +9,7 @@ type TerraformModule struct {
 	FullPath     string
 	ModuleConfig tfconfig.Module
 	Resources    map[string]TerraformCodeBlock
+	Whitelist    []WhitelistModule
 }
 
 type TerraformCodeBlock struct {
