@@ -43,13 +43,13 @@ func ModuleStaticChecks() []data.Check {
 			defer wg.Done()
 
 			check, err := checkFunction(modules)
-			// Apply whitelist on Terraform code blocks checks errors
+			// Apply ignore on Terraform code blocks checks errors
 			// This only cover Terraform resources that have a POS attribute
 			for i := len(check.Errors) - 1; i >= 0; i-- {
-				check, _ = helpers.ApplyWhitelistOnCodeBlock(check, i, modules)
-				check, _ = helpers.ApplyWhitelistOnModule(check, i, modules)
+				check, _ = helpers.ApplyIgnoreOnCodeBlock(check, i, modules)
+				check, _ = helpers.ApplyIgnoreOnModule(check, i, modules)
 			}
-			// Replace the check error status with the array after whitelisting
+			// Replace the check error status with the array after ignoreing
 			if len(check.Errors) == 0 {
 				check.Status = "✅"
 			}

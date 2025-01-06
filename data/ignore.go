@@ -1,12 +1,12 @@
 package data
 
-type WhitelistComment struct {
+type IgnoreComment struct {
 	CheckID    string
 	LineNumber int
 	Path       string
 }
 
-type WhitelistModule struct {
+type IgnoreModule struct {
 	CheckID    string
 	ModulePath string
 }

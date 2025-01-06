@@ -84,7 +84,7 @@ resource "azurerm_resource_group" "network" {
   name...
 ```
 
-You can also whitelist entire checks in **module** by adding them to a `.guacamoleignore` file at the root of your codebase.
+You can also whitelist entire checks in **modules** by adding them to a `.guacamoleignore` file at the root of your codebase.
 The format of the file should be: path of the `module - check ID` to ignore.
 
 ```bash
