@@ -36,7 +36,7 @@ func RequiredProviderVersionOperatorInModules(modules map[string]data.TerraformM
 				matched := matcher.MatchString(versionConstraint)
 				if !matched {
 					requiredProvidersInError = append(requiredProvidersInError, data.Error{
-						Path:        module.FullPath + requiredProvider.Source,
+						Path:        module.FullPath + " - " + requiredProvider.Source,
 						LineNumber:  -1,
 						Description: requiredProvider.Source + " --> " + versionConstraint,
 					})
