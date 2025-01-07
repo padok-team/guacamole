@@ -88,7 +88,9 @@ You can also whitelist entire checks in **modules** by adding them to a `.guacam
 The format of the file should be: path of the `module - check ID` to ignore.
 
 ```bash
-pathtomodule/modules/cloud-run-app TF_MOD_002
+pathtomodule/modules/cloud-run-app TF_MOD_002,TF_MOD_001
+pathtomodule/modules/network TF_NAM_001
+
 ```
 
 This is the only way to whitelist the check `TF_MOD_002`
