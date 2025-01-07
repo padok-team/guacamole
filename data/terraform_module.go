@@ -9,12 +9,13 @@ type TerraformModule struct {
 	FullPath     string
 	ModuleConfig tfconfig.Module
 	Resources    map[string]TerraformCodeBlock
+	Ignore       []IgnoreModule
 }
 
 type TerraformCodeBlock struct {
-	Name              string
-	ModulePath        string
-	Pos               int
-	FilePath          string
-	WhitelistComments []WhitelistComment
+	Name           string
+	ModulePath     string
+	Pos            int
+	FilePath       string
+	IgnoreComments []IgnoreComment
 }

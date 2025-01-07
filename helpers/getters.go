@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,6 +17,7 @@ import (
 func GetModules() (map[string]data.TerraformModule, error) {
 	codebasePath := viper.GetString("codebase-path")
 	modules := make(map[string]data.TerraformModule)
+	ignoreOnModule, _ := GetIgnoreingInFile()
 	//Get all subdirectories in root path
 	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -27,8 +27,8 @@ func GetModules() (map[string]data.TerraformModule, error) {
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".tf") {
 			// exclude the files which are in the .terragrunt-cache or .terraform directory
 			if !regexp.MustCompile(`\.terragrunt-cache|\.terraform`).MatchString(path) {
-				// Get all whitelisting comments
-				whitelistCommentOfFile, _ := GetWhitelistingComments(path)
+				// Get all ignoreing comments
+				ignoreCommentOfFile, _ := GetIgnoreingComments(path)
 				// Check if the module is already in the list
 				alreadyInList := false
 				for _, m := range modules {
@@ -39,6 +39,8 @@ func GetModules() (map[string]data.TerraformModule, error) {
 				// If not in list create the module
 				if !alreadyInList {
 					modules[filepath.Dir(path)], _ = LoadModule(filepath.Dir(path))
+					// Associate ignoreing comments on module from the .guacamoleignore file
+					AssociateIgnoreingCommentsOnModule(ignoreOnModule, filepath.Dir(path), modules)
 				}
 				// Create a temporary object with all resources in order
 				resourcesInFile := make(map[string]data.TerraformCodeBlock)
@@ -57,20 +59,8 @@ func GetModules() (map[string]data.TerraformModule, error) {
 					return resourcesInFile[keys[i]].Pos < resourcesInFile[keys[j]].Pos
 				})
 
-				// Associate the whitelisting comments to a resource (Resource, Data, Variable or Output)
-				for _, whitelistingComment := range whitelistCommentOfFile {
-					previousPos := 0
-					for _, i := range keys {
-						// Find closest code block within the file
-						if previousPos < whitelistingComment.LineNumber && whitelistingComment.LineNumber < resourcesInFile[i].Pos {
-							r := modules[filepath.Dir(path)].Resources[i]
-							r.WhitelistComments = append(r.WhitelistComments, whitelistingComment)
-							modules[filepath.Dir(path)].Resources[i] = r
-							break
-						}
-						previousPos = resourcesInFile[i].Pos
-					}
-				}
+				// Associate the ignoreing comments to a resource (Resource, Data, Variable or Output)
+				AssociateIgnoreingComments(ignoreCommentOfFile, keys, resourcesInFile, modules, path)
 			}
 		}
 		return nil
@@ -129,43 +119,44 @@ func LoadModule(path string) (data.TerraformModule, error) {
 	// Create map of code blocks (resources, data, variables and outputs) of module
 	for _, resource := range moduleConfig.ManagedResources {
 		resources[resource.Type+resource.Name] = data.TerraformCodeBlock{
-			Name:              resource.Type + " " + resource.Name,
-			ModulePath:        path,
-			Pos:               resource.Pos.Line,
-			FilePath:          resource.Pos.Filename,
-			WhitelistComments: []data.WhitelistComment{},
+			Name:           resource.Type + " " + resource.Name,
+			ModulePath:     path,
+			Pos:            resource.Pos.Line,
+			FilePath:       resource.Pos.Filename,
+			IgnoreComments: []data.IgnoreComment{},
 		}
 	}
 	// Load data
 	for _, resource := range moduleConfig.DataResources {
 		resources[resource.Type+resource.Name] = data.TerraformCodeBlock{
-			Name:              resource.Type + " " + resource.Name,
-			ModulePath:        path,
-			Pos:               resource.Pos.Line,
-			WhitelistComments: []data.WhitelistComment{},
-			FilePath:          resource.Pos.Filename,
+			Name:           resource.Type + " " + resource.Name,
+			ModulePath:     path,
+			Pos:            resource.Pos.Line,
+			IgnoreComments: []data.IgnoreComment{},
+			FilePath:       resource.Pos.Filename,
 		}
 	}
 	// Load variables
 	for _, variable := range moduleConfig.Variables {
 		resources["variable "+variable.Type+variable.Name] = data.TerraformCodeBlock{
-			Name:              "variable " + variable.Type + " " + variable.Name,
-			ModulePath:        path,
-			Pos:               variable.Pos.Line,
-			WhitelistComments: []data.WhitelistComment{},
-			FilePath:          variable.Pos.Filename,
+			Name:           "variable " + variable.Type + " " + variable.Name,
+			ModulePath:     path,
+			Pos:            variable.Pos.Line,
+			IgnoreComments: []data.IgnoreComment{},
+			FilePath:       variable.Pos.Filename,
 		}
 	}
 	// Load outputs
 	for _, output := range moduleConfig.Outputs {
 		resources["output"+output.Name] = data.TerraformCodeBlock{
-			Name:              "output " + output.Name,
-			ModulePath:        path,
-			Pos:               output.Pos.Line,
-			WhitelistComments: []data.WhitelistComment{},
-			FilePath:          output.Pos.Filename,
+			Name:           "output " + output.Name,
+			ModulePath:     path,
+			Pos:            output.Pos.Line,
+			IgnoreComments: []data.IgnoreComment{},
+			FilePath:       output.Pos.Filename,
 		}
 	}
+	// Assemble the module object
 	module := data.TerraformModule{
 		FullPath:     path,
 		Name:         filepath.Base(path),
@@ -174,38 +165,6 @@ func LoadModule(path string) (data.TerraformModule, error) {
 	}
 
 	return module, nil
-}
-
-func GetWhitelistingComments(path string) ([]data.WhitelistComment, error) {
-	whitelistComments := []data.WhitelistComment{}
-	// Parse the file to get whitelist comments
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	// Read the file and find comments containing guacamole-ignore
-	scanner := bufio.NewScanner(file)
-	i := 1 //Set cursor to the start of the file
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "guacamole-ignore") {
-			whitelistComment := data.WhitelistComment{}
-			// Regex to match the check ID in the form of TF/TG_XXX_0XX
-			regexp := regexp.MustCompile(`(T[F|G]_(\w+)_\d+)`)
-			match := regexp.FindStringSubmatch(line)
-			if len(match) > 0 {
-				whitelistComment.CheckID = match[0]
-				whitelistComment.LineNumber = i
-				whitelistComment.Path = path
-
-				// Attach comment to an object
-			}
-			whitelistComments = append(whitelistComments, whitelistComment)
-		}
-		i++
-	}
-	return whitelistComments, nil
 }
 
 // TODO: add init and plan layers function

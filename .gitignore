@@ -6,4 +6,4 @@ tmp
 guacamole
 # Ignore modifications on examples
 example/
-.vscode
+.vscode/

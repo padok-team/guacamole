@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"strings"
 	"sync"
 
 	"github.com/padok-team/guacamole/data"
@@ -44,11 +43,13 @@ func ModuleStaticChecks() []data.Check {
 			defer wg.Done()
 
 			check, err := checkFunction(modules)
-			// Apply whitelist on checks errors
+			// Apply ignore on Terraform code blocks checks errors
+			// This only cover Terraform resources that have a POS attribute
 			for i := len(check.Errors) - 1; i >= 0; i-- {
-				check, _ = applyWhitelist(check, i, modules)
+				check, _ = helpers.ApplyIgnoreOnCodeBlock(check, i, modules)
+				check, _ = helpers.ApplyIgnoreOnModule(check, i, modules)
 			}
-			// Replace the check error status with the array after whitelisting
+			// Replace the check error status with the array after ignoreing
 			if len(check.Errors) == 0 {
 				check.Status = "✅"
 			}
@@ -78,18 +79,4 @@ func ModuleStaticChecks() []data.Check {
 	})
 
 	return checkResults
-}
-
-func applyWhitelist(checks data.Check, indexOfCheckedcheck int, modules map[string]data.TerraformModule) (data.Check, error) {
-	for _, module := range modules {
-		for _, resource := range module.Resources {
-			for _, whitelist := range resource.WhitelistComments {
-				if strings.Contains(checks.Errors[indexOfCheckedcheck].Path, resource.FilePath) && checks.Errors[indexOfCheckedcheck].LineNumber == resource.Pos && checks.ID == whitelist.CheckID {
-					checks.Errors = append(checks.Errors[:indexOfCheckedcheck], checks.Errors[indexOfCheckedcheck+1:]...)
-					return checks, nil
-				}
-			}
-		}
-	}
-	return checks, nil
 }

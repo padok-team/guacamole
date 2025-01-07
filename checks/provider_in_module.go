@@ -21,7 +21,7 @@ func ProviderInModule(modules map[string]data.TerraformModule) (data.Check, erro
 		if diags.HasErrors() {
 			return data.Check{}, diags.Err()
 		}
-		//If the module has no provider, display an error
+		//If the module has a provider, display an error
 		if len(moduleConf.ProviderConfigs) > 0 {
 			modulesInError = append(modulesInError, data.Error{
 				Path:        module.FullPath,

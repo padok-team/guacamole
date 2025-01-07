@@ -10,6 +10,7 @@ import (
 
 var cfgFile string
 var codebasePath string
+var ignorePath string
 var terraformBin string
 
 // rootCmd represents the base command when called without any subcommands
@@ -47,8 +48,10 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.PersistentFlags().StringVarP(&codebasePath, "codebase-path", "p", ".", "path to your IaC codebase")
+	rootCmd.PersistentFlags().StringVarP(&ignorePath, "guacamoleignore-path", "w", ".guacamoleignore", "path to your ignore file")
 
 	viper.BindPFlag("codebase-path", rootCmd.PersistentFlags().Lookup("codebase-path"))
+	viper.BindPFlag("guacamoleignore-path", rootCmd.PersistentFlags().Lookup("guacamoleignore-path"))
 
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Display verbose output")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
