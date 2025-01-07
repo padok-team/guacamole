@@ -5,16 +5,22 @@
   ],
   "packageRules": [
     {
-      "matchPackagePatterns": ["gomod"],
-      "groupName": "go"
+      "groupName": "go",
+      "matchPackageNames": [
+        "/gomod/"
+      ]
     },
     {
-      "matchPackagePatterns": ["docker"],
-      "groupName": "docker"
+      "groupName": "docker",
+      "matchPackageNames": [
+        "/docker/"
+      ]
     },
     {
-      "matchPackagePatterns": ["github"],
-      "groupName": "github"
+      "groupName": "github",
+      "matchPackageNames": [
+        "/github/"
+      ]
     }
   ]
 }
