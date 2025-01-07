@@ -30,11 +30,13 @@ func VarNumberMatchesType(modules map[string]data.TerraformModule) (data.Check, 
 			// Check if prefix is "list"
 			isCollection := strings.HasPrefix(variable.Type, "list") || strings.HasPrefix(variable.Type, "set") || strings.HasPrefix(variable.Type, "map")
 			pluralize := pluralize.NewClient()
+			// Add irregular rules
+			// If this list gets too big, we should consider moving it to a file or even finding a better way to handle this
+			pluralize.AddIrregularRule("uri", "uris")
 
 			// Remove all spaces and new lines from the type
 			variable.Type = strings.ReplaceAll(variable.Type, "\n", "")
 			variable.Type = strings.ReplaceAll(variable.Type, " ", "")
-
 			if isCollection && !pluralize.IsPlural(variable.Name) {
 				variablesInError = append(variablesInError, data.Error{
 					Path:        variable.Pos.Filename,
