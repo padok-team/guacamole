@@ -43,7 +43,7 @@ jobs:
           echo "RELEASE_NAME=$RELEASE_NAME"
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6
+        uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3 # v6
         with:
           distribution: goreleaser
           version: latest
