@@ -2,7 +2,7 @@ module github.com/padok-team/guacamole
 
 go 1.21
 
-toolchain go1.21.5
+toolchain go1.24.1
 
 require (
 	github.com/fatih/color v1.16.0
