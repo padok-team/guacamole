@@ -4,8 +4,9 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/guacamole/checks"
 	"github.com/padok-team/guacamole/helpers"
@@ -15,14 +16,15 @@ import (
 
 // plan represents the run command
 var static = &cobra.Command{
-	Use:   "static",
-	Short: "Run static code checks",
+	Use:    "static",
+	Short:  "Run static code checks",
+	PreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
-		l := log.New(os.Stderr, "", 0)
-		l.Println("You can specify what you want to check : layer or module")
-		l.Println("Defaulting to checking both")
+		log.Warn("You can specify what you want to check : layer or module")
+		log.Info("Defaulting to checking both")
+		log.Info("Running static checks on module...")
 		checkResults := checks.ModuleStaticChecks()
-		l.Println("Running static checks on layer...")
+		log.Info("Running static checks on layer...")
 		checkResults = append(checkResults, checks.LayerStaticChecks()...)
 		verbose := viper.GetBool("verbose")
 		helpers.RenderChecks(checkResults, verbose)

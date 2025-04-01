@@ -1,8 +1,10 @@
 package checks
 
 import (
+	"os"
 	"sync"
 
+	"github.com/gruntwork-io/terragrunt/pkg/log"
 	"github.com/padok-team/guacamole/data"
 
 	"golang.org/x/exp/slices"
@@ -28,7 +30,8 @@ func LayerStaticChecks() []data.Check {
 
 			check, err := checkFunction()
 			if err != nil {
-				panic(err)
+				log.Error(err)
+				os.Exit(1)
 			}
 			c <- check
 		}(checkFunction)

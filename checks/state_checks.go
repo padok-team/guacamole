@@ -1,9 +1,11 @@
 package checks
 
 import (
+	"os"
 	"sync"
 
 	"github.com/padok-team/guacamole/data"
+	log "github.com/sirupsen/logrus"
 )
 
 func StateChecks(layers []*data.Layer) []data.Check {
@@ -26,7 +28,8 @@ func StateChecks(layers []*data.Layer) []data.Check {
 
 			check, err := checkFunction(layers)
 			if err != nil {
-				panic(err)
+				log.Error(err)
+				os.Exit(1)
 			}
 			c <- check
 		}(checkFunction)

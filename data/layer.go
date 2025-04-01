@@ -2,10 +2,11 @@ package data
 
 import (
 	"context"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -35,32 +36,32 @@ type moduleDepthWarning struct {
 }
 
 func (l *Layer) ComputePlan() {
-	log := log.New(os.Stderr, "", 0)
 	dirPath := "/tmp/" + strings.ReplaceAll(l.Name, "/", "_")
 
 	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
 	if err != nil {
-		log.Printf("failed to create Terraform instance: %s", err)
+		log.Info("failed to create Terraform instance: ", err)
 	}
 
 	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
 	if os.IsNotExist(err) {
 		err = tf.Init(context.Background())
 		if err != nil {
-			panic(err)
+			log.Error(err)
+			os.Exit(1)
 		}
 	}
 
 	// Don't lock the state file while running the plan
 	_, err = tf.Plan(context.Background(), tfexec.Out(dirPath+"_plan.json"), tfexec.Lock(false))
 	if err != nil {
-		log.Printf("failed to create plan: %s", err)
+		log.Info("failed to create plan: ", err)
 	}
 
 	// Create JSON plan
 	jsonPlan, err := tf.ShowPlanFile(context.Background(), dirPath+"_plan.json")
 	if err != nil {
-		log.Printf("failed to create JSON plan: %s", err)
+		log.Info("failed to create JSON plan: ", err)
 	}
 
 	l.Plan = jsonPlan
@@ -69,21 +70,22 @@ func (l *Layer) ComputePlan() {
 func (l *Layer) ComputeState() {
 	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
 	if err != nil {
-		log.Printf("failed to create Terraform instance: %s", err)
+		log.Info("failed to create Terraform instance: ", err)
 	}
 
 	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
 	if os.IsNotExist(err) {
 		err = tf.Init(context.Background())
 		if err != nil {
-			panic(err)
+			log.Error(err)
+			os.Exit(1)
 		}
 	}
 
 	// Create Terraform state file
 	state, err := tf.Show(context.TODO())
 	if err != nil {
-		log.Printf("failed to create state: %s", err)
+		log.Info("failed to create state: %s", err)
 	}
 
 	l.State = state

@@ -2,9 +2,10 @@ package checks
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/guacamole/data"
 
@@ -17,7 +18,7 @@ func Profile(codebase data.Codebase, verbose bool) {
 	codebase.ComputeStats()
 	// Take the length of the longest number of objects in a layer for padding
 	if len(codebase.Layers) == 0 {
-		log.Println("No layers found")
+		log.Info("No layers found")
 		return
 	}
 

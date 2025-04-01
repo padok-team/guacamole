@@ -1,10 +1,12 @@
 package checks
 
 import (
+	"os"
 	"sync"
 
 	"github.com/padok-team/guacamole/data"
 	"github.com/padok-team/guacamole/helpers"
+	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/exp/slices"
 )
@@ -29,9 +31,9 @@ func ModuleStaticChecks() []data.Check {
 	// Find recusively all the modules in the current directory
 	modules, err := helpers.GetModules()
 	if err != nil {
-		panic(err)
+		log.Error(err)
+		os.Exit(1)
 	}
-
 	wg := new(sync.WaitGroup)
 	wg.Add(len(checks))
 
@@ -41,8 +43,11 @@ func ModuleStaticChecks() []data.Check {
 	for _, checkFunction := range checks {
 		go func(checkFunction func(m map[string]data.TerraformModule) (data.Check, error)) {
 			defer wg.Done()
-
 			check, err := checkFunction(modules)
+			if err != nil {
+				log.Error(err)
+				os.Exit(1)
+			}
 			// Apply ignore on Terraform code blocks checks errors
 			// This only cover Terraform resources that have a POS attribute
 			for i := len(check.Errors) - 1; i >= 0; i-- {
@@ -52,9 +57,6 @@ func ModuleStaticChecks() []data.Check {
 			// Replace the check error status with the array after ignoreing
 			if len(check.Errors) == 0 {
 				check.Status = "✅"
-			}
-			if err != nil {
-				panic(err)
 			}
 			c <- check
 		}(checkFunction)

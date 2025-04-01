@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"github.com/padok-team/guacamole/data"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
 )
@@ -27,6 +28,7 @@ func GetModules() (map[string]data.TerraformModule, error) {
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".tf") {
 			// exclude the files which are in the .terragrunt-cache or .terraform directory
 			if !regexp.MustCompile(`\.terragrunt-cache|\.terraform`).MatchString(path) {
+				log.Debug("File found: ", path)
 				// Get all ignoreing comments
 				ignoreCommentOfFile, _ := GetIgnoreingComments(path)
 				// Check if the module is already in the list
@@ -38,7 +40,11 @@ func GetModules() (map[string]data.TerraformModule, error) {
 				}
 				// If not in list create the module
 				if !alreadyInList {
-					modules[filepath.Dir(path)], _ = LoadModule(filepath.Dir(path))
+					modules[filepath.Dir(path)], err = LoadModule(filepath.Dir(path))
+					if err != nil {
+						return fmt.Errorf("failed to load module: %w", err)
+					}
+					log.Debug("Module found: ", modules[filepath.Dir(path)].FullPath)
 					// Associate ignoreing comments on module from the .guacamoleignore file
 					AssociateIgnoreingCommentsOnModule(ignoreOnModule, filepath.Dir(path), modules)
 				}
@@ -61,6 +67,9 @@ func GetModules() (map[string]data.TerraformModule, error) {
 
 				// Associate the ignoreing comments to a resource (Resource, Data, Variable or Output)
 				AssociateIgnoreingComments(ignoreCommentOfFile, keys, resourcesInFile, modules, path)
+				if modules[filepath.Dir(path)].FullPath == "" {
+					log.Error(modules[filepath.Dir(path)])
+				}
 			}
 		}
 		return nil

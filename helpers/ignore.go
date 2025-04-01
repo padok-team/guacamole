@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/padok-team/guacamole/data"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -33,10 +34,9 @@ func GetIgnoreingComments(path string) ([]data.IgnoreComment, error) {
 				ignoreComment.CheckID = match[0]
 				ignoreComment.LineNumber = i
 				ignoreComment.Path = path
-
-				// Attach comment to an object
+				log.Debug("Ignore comment found: ", ignoreComment.CheckID, " - Line number: ", ignoreComment.LineNumber)
+				ignoreComments = append(ignoreComments, ignoreComment)
 			}
-			ignoreComments = append(ignoreComments, ignoreComment)
 		}
 		i++
 	}
@@ -49,6 +49,7 @@ func GetIgnoreingComments(path string) ([]data.IgnoreComment, error) {
 
 func GetIgnoreingInFile() ([]data.IgnoreModule, error) {
 	ignorefile := viper.GetString("guacamoleignore-path")
+	codebasePath := viper.GetString("codebase-path")
 	ignore := []data.IgnoreModule{}
 	// Parse the file to get ignore comments
 	file, err := os.Open(ignorefile)
@@ -63,12 +64,14 @@ func GetIgnoreingInFile() ([]data.IgnoreModule, error) {
 		parts := strings.Fields(line)
 		path := parts[0]
 		id := parts[1]
+
 		// Split by commers to get multiple checks
 		for _, id := range strings.Split(id, ",") {
 			// Add check to validate the format of the check ID and the path
 			ignoreModule := data.IgnoreModule{}
 			ignoreModule.CheckID = id
-			ignoreModule.ModulePath = path
+			ignoreModule.ModulePath = codebasePath + "/" + path
+			log.Debug("Ignore module: ", ignoreModule.ModulePath, " - Check ID ", ignoreModule.CheckID)
 			ignore = append(ignore, ignoreModule)
 		}
 	}
