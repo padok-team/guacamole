@@ -15,8 +15,9 @@ import (
 
 // layerCmd represents the layer command
 var layerCmd = &cobra.Command{
-	Use:   "layer",
-	Short: "Run static code checks on layers, it can be ran on a unique layer or at the root of your repo",
+	Use:    "layer",
+	Short:  "Run static code checks on layers, it can be ran on a unique layer or at the root of your repo",
+	PreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		l := log.New(os.Stderr, "", 0)
 		l.Println("Running static checks on layers...")

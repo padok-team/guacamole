@@ -5,8 +5,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/guacamole/checks"
 	"github.com/padok-team/guacamole/data"
@@ -24,7 +25,6 @@ var profile = &cobra.Command{
 ⚠️ WARNING: This command may fail in unexpected way if all the layers you want to check are not initialized properly.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		l := log.New(os.Stderr, "", 0)
 		var prompt string
 		fmt.Println("⚠️ WARNING: This command may fail in unexpected way if all the layers you want to check are not initialized properly.")
 		for prompt != "y" && prompt != "n" {
@@ -32,13 +32,14 @@ var profile = &cobra.Command{
 			fmt.Scanln(&prompt)
 		}
 		if prompt == "y" {
-			l.Println("Profiling layers...")
+			log.Info("Profiling layers...")
 			layers, err := helpers.ComputeLayers(false)
 			codebase := data.Codebase{
 				Layers: layers,
 			}
 			if err != nil {
-				panic(err)
+				log.Error(err)
+				os.Exit(1)
 			}
 			verbose := viper.GetBool("verbose")
 			checks.Profile(codebase, verbose)

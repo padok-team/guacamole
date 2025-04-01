@@ -5,8 +5,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/padok-team/guacamole/checks"
 	"github.com/padok-team/guacamole/helpers"
@@ -24,7 +25,6 @@ var state = &cobra.Command{
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		verbose := viper.GetBool("verbose")
-		l := log.New(os.Stderr, "", 0)
 		var prompt string
 		fmt.Println("⚠️ WARNING: This command may fail in unexpected way if all the layers you want to check are not initialized properly.")
 		for prompt != "y" && prompt != "n" {
@@ -33,9 +33,10 @@ var state = &cobra.Command{
 		}
 		if prompt == "y" {
 			layers, err := helpers.ComputeLayers(false)
-			l.Println("Running state checks...")
+			log.Info("Running state checks...")
 			if err != nil {
-				panic(err)
+				log.Error(err)
+				os.Exit(1)
 			}
 			checkResults := checks.StateChecks(layers)
 			helpers.RenderChecks(checkResults, verbose)
@@ -44,7 +45,7 @@ var state = &cobra.Command{
 				os.Exit(1)
 			}
 		} else {
-			l.Println("Aborting...")
+			log.Error("Aborting...")
 		}
 	},
 }

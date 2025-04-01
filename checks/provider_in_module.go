@@ -2,11 +2,13 @@ package checks
 
 import (
 	"github.com/padok-team/guacamole/data"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
 func ProviderInModule(modules map[string]data.TerraformModule) (data.Check, error) {
+	log.Debug("Running check: ProviderInModule")
 	dataCheck := data.Check{
 		ID:                "TF_MOD_002",
 		Name:              "Provider should be defined by the consumer of the module",

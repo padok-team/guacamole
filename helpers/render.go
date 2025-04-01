@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/padok-team/guacamole/data"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/savioxavier/termlink"
@@ -18,7 +19,8 @@ func RenderTable(checkResults []data.Check) {
 	// Get the terminal width
 	width, _, err := term.GetSize(0)
 	if err != nil {
-		panic(err)
+		log.Error(err)
+		os.Exit(1)
 	}
 	// Determine column widths depending on the terminal size
 	t.SetColumnConfigs([]table.ColumnConfig{

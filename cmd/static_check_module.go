@@ -15,8 +15,9 @@ import (
 
 // moduleCmd represents the module command
 var moduleCmd = &cobra.Command{
-	Use:   "module",
-	Short: "Run static code checks on modules",
+	Use:    "module",
+	Short:  "Run static code checks on modules",
+	PreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		l := log.New(os.Stderr, "", 0)
 		l.Println("Running static checks on modules...")
