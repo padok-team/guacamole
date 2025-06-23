@@ -97,13 +97,20 @@ func AssociateIgnoreingComments(ignoreCommentOfFile []data.IgnoreComment, keys [
 }
 
 func AssociateIgnoreingCommentsOnModule(ignoreOnModule []data.IgnoreModule, path string, modules map[string]data.TerraformModule) {
+	log.Debugf("Starting AssociateIgnoreingCommentsOnModule for path: %s with %d ignore rules", path, len(ignoreOnModule))
+
 	for _, ignore := range ignoreOnModule {
-		if ignore.ModulePath == path {
+		log.Debugf("Checking ignore rule with CheckID: %s, ModulePath: %s", ignore.CheckID, ignore.ModulePath)
+
+		if strings.Contains(ignore.ModulePath, path) {
+			log.Debugf("Match found! Adding ignore rule %s to module at path %s", ignore.CheckID, path)
 			module := modules[path]
 			module.Ignore = append(module.Ignore, ignore)
 			modules[path] = module
 		}
 	}
+
+	log.Debugf("Finished processing ignore rules for path: %s", path)
 }
 
 // Remove the check from the list if it is ignoreed in the code
@@ -123,14 +130,22 @@ func ApplyIgnoreOnCodeBlock(checks data.Check, indexOfCheckedcheck int, modules 
 
 // Remove the check from the list if it is ignoreed at the module level
 func ApplyIgnoreOnModule(checks data.Check, indexOfCheckedcheck int, modules map[string]data.TerraformModule) (data.Check, error) {
+	log.Debugf("Starting ApplyIgnoreOnModule for check %s (error index: %d, path: %s)", checks.ID, indexOfCheckedcheck, checks.Errors[indexOfCheckedcheck].Path)
+
 	for _, module := range modules {
 		for _, ignore := range module.Ignore {
 			// If check ID and path match, remove the check from the list
-			if checks.ID == ignore.CheckID && strings.Contains(checks.Errors[indexOfCheckedcheck].Path, ignore.ModulePath) {
+			log.Debugf("Comparing Check ID: %s with Ignore Check ID: %s | Path: %s with Ignore Path: %s",
+				checks.ID, ignore.CheckID, checks.Errors[indexOfCheckedcheck].Path, ignore.ModulePath)
+
+			if checks.ID == ignore.CheckID && strings.Contains(ignore.ModulePath, checks.Errors[indexOfCheckedcheck].Path) {
+				log.Debugf("Match found! Ignoring check %s for path %s", checks.ID, checks.Errors[indexOfCheckedcheck].Path)
 				checks.Errors = append(checks.Errors[:indexOfCheckedcheck], checks.Errors[indexOfCheckedcheck+1:]...)
 				return checks, nil
 			}
 		}
 	}
+
+	log.Debugf("No ignore rules matched for check %s (error index: %d)", checks.ID, indexOfCheckedcheck)
 	return checks, nil
 }

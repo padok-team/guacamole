@@ -51,8 +51,18 @@ func ModuleStaticChecks() []data.Check {
 			// Apply ignore on Terraform code blocks checks errors
 			// This only cover Terraform resources that have a POS attribute
 			for i := len(check.Errors) - 1; i >= 0; i-- {
+				log.Debugf("Processing ignore for check %s (error index: %d)", check.ID, i)
+				originalCheck := check
 				check, _ = helpers.ApplyIgnoreOnCodeBlock(check, i, modules)
+				if len(originalCheck.Errors) > len(check.Errors) {
+					log.Debugf("Check %s was ignored by code block rule", check.ID)
+				}
+
+				originalCheck = check
 				check, _ = helpers.ApplyIgnoreOnModule(check, i, modules)
+				if len(originalCheck.Errors) > len(check.Errors) {
+					log.Debugf("Check %s was ignored by module rule", check.ID)
+				}
 			}
 			// Replace the check error status with the array after ignoreing
 			if len(check.Errors) == 0 {
