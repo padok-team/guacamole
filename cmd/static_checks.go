@@ -22,6 +22,7 @@ var static = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Warn("You can specify what you want to check : layer or module")
 		log.Info("Defaulting to checking both")
+		log.Infof("Using codebase path: %s", viper.GetString("codebase-path"))
 		log.Info("Running static checks on module...")
 		checkResults := checks.ModuleStaticChecks()
 		log.Info("Running static checks on layer...")
