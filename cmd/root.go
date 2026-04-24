@@ -50,12 +50,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&codebasePath, "codebase-path", "p", ".", "path to your IaC codebase")
 	rootCmd.PersistentFlags().StringVarP(&ignorePath, "guacamoleignore-path", "w", ".guacamoleignore", "path to your ignore file")
 	// Debug flag
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "verbose logging")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug mode")
 
 	viper.BindPFlag("codebase-path", rootCmd.PersistentFlags().Lookup("codebase-path"))
 	viper.BindPFlag("guacamoleignore-path", rootCmd.PersistentFlags().Lookup("guacamoleignore-path"))
 
-	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Display verbose output")
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Display guidelines errors information")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 }
 
