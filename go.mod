@@ -3,21 +3,21 @@ module github.com/padok-team/guacamole
 go 1.25.0
 
 require (
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/gertd/go-pluralize v0.2.1
-	github.com/gruntwork-io/terragrunt v0.77.22
+	github.com/gruntwork-io/terragrunt v0.99.5
 	github.com/hashicorp/hcl/v2 v2.23.0
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20231204233900-a34142ec2a72
-	github.com/hashicorp/terraform-exec v0.20.0
-	github.com/hashicorp/terraform-json v0.21.0
-	github.com/jedib0t/go-pretty/v6 v6.5.9
-	github.com/savioxavier/termlink v1.3.0
+	github.com/hashicorp/terraform-config-inspect 813a97530220
+	github.com/hashicorp/terraform-exec v0.25.1
+	github.com/hashicorp/terraform-json v0.27.2
+	github.com/jedib0t/go-pretty/v6 v6.7.10
+	github.com/savioxavier/termlink v1.4.3
 	github.com/sirupsen/logrus v1.9.4
-	github.com/spf13/cobra v1.8.1
-	github.com/spf13/viper v1.19.0
-	github.com/zclconf/go-cty v1.16.4
-	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	golang.org/x/term v0.42.0
+	github.com/spf13/cobra v1.10.2
+	github.com/spf13/viper v1.21.0
+	github.com/zclconf/go-cty v1.18.1
+	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
+	golang.org/x/term v0.31.0
 )
 
 require (
