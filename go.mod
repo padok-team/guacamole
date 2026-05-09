@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/fatih/color v1.18.0
 	github.com/gertd/go-pluralize v0.2.1
-	github.com/gruntwork-io/terragrunt v0.77.22
+	github.com/gruntwork-io/terragrunt v1.0.4
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20231204233900-a34142ec2a72
 	github.com/hashicorp/terraform-exec v0.20.0
