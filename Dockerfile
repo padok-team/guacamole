@@ -1,5 +1,5 @@
 # Build the guacamole binary
-FROM docker.io/library/golang:1.26.3@sha256:313faae491b410a35402c05d35e7518ae99103d957308e940e1ae2cfa0aac29b as builder
+FROM docker.io/library/golang:1.26.3@sha256:313faae491b410a35402c05d35e7518ae99103d957308e940e1ae2cfa0aac29b AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/guacamole
@@ -41,13 +41,20 @@ WORKDIR /home/guacamole
 
 ARG TARGETARCH
 ARG TERRAGRUNT_VERSION
+ARG TERRAFORM_VERSION
 
-# Install ca-certificates for HTTPS, and terragrunt if a version is provided
-RUN apk add --no-cache ca-certificates && \
+# Install ca-certificates for HTTPS, plus terragrunt and terraform if versions are provided
+RUN apk add --no-cache ca-certificates unzip && \
     if [ -n "${TERRAGRUNT_VERSION:-}" ]; then \
       wget -qO /usr/local/bin/terragrunt \
         "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_${TARGETARCH:-amd64}" && \
       chmod +x /usr/local/bin/terragrunt; \
+    fi && \
+    if [ -n "${TERRAFORM_VERSION:-}" ]; then \
+      wget -qO /tmp/terraform.zip \
+        "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH:-amd64}.zip" && \
+      unzip -q /tmp/terraform.zip -d /usr/local/bin/ && \
+      rm /tmp/terraform.zip; \
     fi
 
 ENV UID=65532
