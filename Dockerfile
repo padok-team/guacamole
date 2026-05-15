@@ -39,8 +39,16 @@ FROM docker.io/library/alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f09
 
 WORKDIR /home/guacamole
 
-# Install required packages
-# RUN apk add --update --no-cache git bash openssh
+ARG TARGETARCH
+ARG TERRAGRUNT_VERSION
+
+# Install ca-certificates for HTTPS, and terragrunt if a version is provided
+RUN apk add --no-cache ca-certificates && \
+    if [ -n "${TERRAGRUNT_VERSION:-}" ]; then \
+      wget -qO /usr/local/bin/terragrunt \
+        "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_${TARGETARCH:-amd64}" && \
+      chmod +x /usr/local/bin/terragrunt; \
+    fi
 
 ENV UID=65532
 ENV GID=65532
