@@ -3,24 +3,45 @@
   "extends": [
     "local>padok-team/renovate-config"
   ],
+
+  "platformAutomerge": false,
+  "automergeType": "pr",
+
   "packageRules": [
     {
-      "groupName": "go",
-      "matchPackageNames": [
-        "/gomod/"
-      ]
+      "description": "Automerge safe updates: digests and patches",
+      "matchUpdateTypes": ["digest", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "groupName": "safe updates"
     },
     {
-      "groupName": "docker",
-      "matchPackageNames": [
-        "/docker/"
-      ]
+      "description": "Go updates",
+      "matchManagers": ["gomod"],
+      "groupName": "go dependencies",
+      "postUpdateOptions": ["gomodTidy"]
     },
     {
-      "groupName": "github",
-      "matchPackageNames": [
-        "/github/"
-      ]
+      "description": "Docker image updates",
+      "matchManagers": ["dockerfile"],
+      "groupName": "docker images"
+    },
+    {
+      "description": "GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    },
+    {
+      "description": "Minor updates: review before merge",
+      "matchUpdateTypes": ["minor"],
+      "automerge": false,
+      "schedule": ["before 10am on monday"]
+    },
+    {
+      "description": "Major updates: manual approval before PR creation",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "dependencyDashboardApproval": true
     }
   ]
 }
