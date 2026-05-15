@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"os"
@@ -60,14 +61,16 @@ func (l *Layer) ComputePlan() {
 	// Create JSON plan
 	showCmd := exec.CommandContext(context.Background(), "terragrunt", "show", "-json", planFile)
 	showCmd.Dir = l.FullPath
-	out, err := showCmd.Output()
-	if err != nil {
-		log.Info("failed to create JSON plan: ", err)
+	var showOut, showErr bytes.Buffer
+	showCmd.Stdout = &showOut
+	showCmd.Stderr = &showErr
+	if err := showCmd.Run(); err != nil {
+		log.Infof("failed to create JSON plan: %s\n%s", err, showErr.String())
 		return
 	}
 
 	var plan tfjson.Plan
-	if err := json.Unmarshal(out, &plan); err != nil {
+	if err := json.Unmarshal(showOut.Bytes(), &plan); err != nil {
 		log.Info("failed to parse JSON plan: ", err)
 		return
 	}
@@ -89,14 +92,16 @@ func (l *Layer) ComputeState() {
 	// Create Terraform state file
 	showCmd := exec.CommandContext(context.Background(), "terragrunt", "show", "-json")
 	showCmd.Dir = l.FullPath
-	out, err := showCmd.Output()
-	if err != nil {
-		log.Infof("failed to create state: %s", err)
+	var showOut, showErr bytes.Buffer
+	showCmd.Stdout = &showOut
+	showCmd.Stderr = &showErr
+	if err := showCmd.Run(); err != nil {
+		log.Infof("failed to create state: %s\n%s", err, showErr.String())
 		return
 	}
 
 	var state tfjson.State
-	if err := json.Unmarshal(out, &state); err != nil {
+	if err := json.Unmarshal(showOut.Bytes(), &state); err != nil {
 		log.Infof("failed to parse state: %s", err)
 		return
 	}
