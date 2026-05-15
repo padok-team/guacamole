@@ -4,6 +4,21 @@ A CLI tool that runs opinionated quality checks on your IaC codebase.
 
 Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-guidelines/) for more information on the quality checks.
 
+## Table of Contents
+
+- [Install](#install)
+  - [With Homebrew](#with-homebrew)
+  - [From binary](#from-binary)
+  - [From GitHub](#from-github)
+- [Usage](#usage)
+  - [Skipping individual checks](#skipping-individual-checks)
+- [List of checks](#list-of-checks)
+  - [Static module check for Terraform](#static-module-check-for-terraform)
+  - [Static layer check for Terragrunt](#static-layer-check-for-terragrunt)
+  - [State](#state)
+- [Demo](#demo)
+- [License](#license)
+
 ## Install
 
 ### With Homebrew
@@ -13,6 +28,18 @@ Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-gui
 ```bash
 brew tap padok-team/tap
 brew install guacamole
+```
+
+### From binary
+
+Download the latest binary for your platform from the [releases page](https://github.com/padok-team/guacamole/releases), then install it:
+
+```bash
+# Make the binary executable
+chmod +x guacamole_<os>_<arch>
+
+# Move it to a directory in your $PATH
+mv guacamole_<os>_<arch> /usr/local/bin/guacamole
 ```
 
 ### From GitHub
