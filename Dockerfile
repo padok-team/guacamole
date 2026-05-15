@@ -44,7 +44,7 @@ ARG TERRAGRUNT_VERSION
 ARG TERRAFORM_VERSION
 
 # Install ca-certificates for HTTPS, plus terragrunt and terraform if versions are provided
-RUN apk add --no-cache ca-certificates unzip && \
+RUN apk add --no-cache ca-certificates git unzip && \
     if [ -n "${TERRAGRUNT_VERSION:-}" ]; then \
       wget -qO /usr/local/bin/terragrunt \
         "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_${TARGETARCH:-amd64}" && \
