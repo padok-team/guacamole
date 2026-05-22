@@ -17,6 +17,7 @@ func LayerStaticChecks() []data.Check {
 		"TerragruntLeafLayer": TerragruntLeafLayer,
 		"LocalIsUseful":       LocalIsUseful,
 		"UnusedInputs":        UnusedInputs,
+		"CodeQualityTg":       CodeQualityTg,
 	}
 
 	var checkResults []data.Check
