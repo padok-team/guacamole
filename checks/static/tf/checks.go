@@ -26,6 +26,7 @@ func ModuleStaticChecks() []data.Check {
 		"ResourceNamingThisThese":                  ResourceNamingThisThese,
 		"ResourceNaming":                           ResourceNaming,
 		"DataSourceComputedDependency":             DataSourceComputedDependency,
+		"CodeQualityTf":                            CodeQualityTf,
 	}
 
 	var checkResults []data.Check
