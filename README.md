@@ -115,6 +115,7 @@ You can specify the path of the `.guacamoleignore` file with the `-w` flag.
 ### Static layer check for Terragrunt
 
 - `TG_DRY_001` - [No duplicate inputs within a layer](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html#%EF%B8%8F-context)
+- `TG_INP_001` - Terragrunt inputs should match variables declared in the called module and none should be unused
 
 ### State
 
