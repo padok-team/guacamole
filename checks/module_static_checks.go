@@ -24,6 +24,7 @@ func ModuleStaticChecks() []data.Check {
 		"RequiredProviderVersionOperatorInModules": RequiredProviderVersionOperatorInModules,
 		"ResourceNamingThisThese":                  ResourceNamingThisThese,
 		"ResourceNaming":                           ResourceNaming,
+		"CodeQualityTf":                            CodeQualityTf,
 	}
 
 	var checkResults []data.Check
