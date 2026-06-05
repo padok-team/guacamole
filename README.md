@@ -32,14 +32,20 @@ brew install guacamole
 
 ### From binary
 
-Download the latest binary for your platform from the [releases page](https://github.com/padok-team/guacamole/releases), then install it:
+Download and install the latest binary in one command:
 
 ```bash
-# Make the binary executable
-chmod +x guacamole_<os>_<arch>
+OS=$(uname -s | tr '[:upper:]' '[:lower:]') \
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
+VERSION=$(curl -s https://api.github.com/repos/padok-team/guacamole/releases/latest | grep tag_name | cut -d '"' -f 4) \
+&& curl -L "https://github.com/padok-team/guacamole/releases/download/${VERSION}/guacamole_${OS}_${ARCH}" -o /usr/local/bin/guacamole \
+&& chmod +x /usr/local/bin/guacamole
+```
 
-# Move it to a directory in your $PATH
-mv guacamole_<os>_<arch> /usr/local/bin/guacamole
+Verify the install:
+
+```bash
+guacamole version
 ```
 
 ### From GitHub
