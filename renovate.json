@@ -42,6 +42,11 @@
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "CLI tool versions",
+      "matchManagers": ["asdf"],
+      "groupName": "cli tools"
     }
   ]
 }
