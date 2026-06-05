@@ -35,10 +35,12 @@ func CodeQualityTf(modules map[string]data.TerraformModule) (data.Check, error) 
 
 		runErr := cmd.Run()
 		if runErr != nil {
-			exitErr, ok := runErr.(*exec.ExitError)
-			if !ok || exitErr.ExitCode() != 1 {
+			_, ok := runErr.(*exec.ExitError)
+			if !ok {
 				return data.Check{}, fmt.Errorf("terraform fmt failed on %s: %w\n%s", module.FullPath, runErr, stderr.String())
 			}
+			// Any non-zero exit code from terraform fmt --check means files need formatting;
+			// stdout contains the list of affected files.
 		}
 
 		for _, file := range strings.Split(strings.TrimSpace(stdout.String()), "\n") {
