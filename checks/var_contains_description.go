@@ -8,7 +8,7 @@ func VarContainsDescription(modules map[string]data.TerraformModule) (data.Check
 	dataCheck := data.Check{
 		ID:                "TF_VAR_001",
 		Name:              "Variable should contain a description",
-		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#variables",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables",
 		Status:            "✅",
 	}
 

@@ -8,7 +8,7 @@ func OutputContainsDescription(modules map[string]data.TerraformModule) (data.Ch
 	dataCheck := data.Check{
 		ID:                "TF_OUT_001",
 		Name:              "Output should contain a description",
-		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#outputs",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#module-outputs",
 		Status:            "✅",
 	}
 
