@@ -39,8 +39,23 @@ FROM docker.io/library/alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f09
 
 WORKDIR /home/guacamole
 
-# Install required packages
-# RUN apk add --update --no-cache git bash openssh
+ARG TARGETARCH
+ARG TERRAGRUNT_VERSION
+ARG TERRAFORM_VERSION
+
+# Install ca-certificates for HTTPS, plus terragrunt and terraform if versions are provided
+RUN apk add --no-cache ca-certificates git unzip && \
+    if [ -n "${TERRAGRUNT_VERSION:-}" ]; then \
+      wget -qO /usr/local/bin/terragrunt \
+        "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_${TARGETARCH:-amd64}" && \
+      chmod +x /usr/local/bin/terragrunt; \
+    fi && \
+    if [ -n "${TERRAFORM_VERSION:-}" ]; then \
+      wget -qO /tmp/terraform.zip \
+        "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${TARGETARCH:-amd64}.zip" && \
+      unzip -q /tmp/terraform.zip -d /usr/local/bin/ && \
+      rm /tmp/terraform.zip; \
+    fi
 
 ENV UID=65532
 ENV GID=65532
