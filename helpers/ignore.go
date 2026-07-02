@@ -151,21 +151,15 @@ func ApplyIgnoreOnModule(checks data.Check, indexOfCheckedcheck int, modules map
 		return checks, nil
 	}
 
-	log.Debugf("Starting ApplyIgnoreOnModule for check %s (error index: %d, path: %s)", checks.ID, indexOfCheckedcheck, checks.Errors[indexOfCheckedcheck].Path)
+	log.Debugf("   [ %s ] ApplyIgnoreOnModule (error index: %d, path: %s)", checks.ID, indexOfCheckedcheck, checks.Errors[indexOfCheckedcheck].Path)
 	for _, module := range modules {
 		for _, ignore := range module.Ignore {
 			// Re-check bounds before each access (in case of concurrent modification)
 			if indexOfCheckedcheck >= len(checks.Errors) {
-				log.Debugf("Index became out of bounds during execution: %d (length: %d)", indexOfCheckedcheck, len(checks.Errors))
 				return checks, nil
 			}
 
-			// If check ID and path match, remove the check from the list
-			log.Debugf("Comparing Check ID: %s with Ignore Check ID: %s | Path: %s with Ignore Path: %s",
-				checks.ID, ignore.CheckID, checks.Errors[indexOfCheckedcheck].Path, ignore.ModulePath)
-
 			if checks.ID == ignore.CheckID && strings.Contains(ignore.ModulePath, checks.Errors[indexOfCheckedcheck].Path) {
-				log.Debugf("Match found! Ignoring check %s for path %s", checks.ID, checks.Errors[indexOfCheckedcheck].Path)
 				// Final bounds check before slice modification
 				if indexOfCheckedcheck < len(checks.Errors) {
 					checks.Errors = append(checks.Errors[:indexOfCheckedcheck], checks.Errors[indexOfCheckedcheck+1:]...)
@@ -175,6 +169,6 @@ func ApplyIgnoreOnModule(checks data.Check, indexOfCheckedcheck int, modules map
 		}
 	}
 
-	log.Debugf("No ignore rules matched for check %s (error index: %d)", checks.ID, indexOfCheckedcheck)
+	log.Debugf("   [ %s ] No ignore rules matched (error index: %d)", checks.ID, indexOfCheckedcheck)
 	return checks, nil
 }

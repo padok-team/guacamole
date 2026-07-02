@@ -65,6 +65,26 @@ DIR=$(pwd) cd /tmp && git clone git@github.com:padok-team/guacamole.git && cd gu
 
 For a more permanent installation, just move the `/tmp/guacamole/guacamole` binary into a directory present in your `$PATH`.
 
+### With Docker
+
+The published Docker image includes the Terraform and Terragrunt versions defined in `.tool-versions`.
+To test Guacamole with different CLI versions, build a custom image:
+
+```bash
+docker build \
+  --build-arg TERRAFORM_VERSION=x.y.z \
+  --build-arg TERRAGRUNT_VERSION=x.y.z \
+  -t guacamole:custom .
+```
+
+Run Guacamole with Docker:
+
+```bash
+IMAGE=ghcr.io/padok-team/guacamole
+TAG=latest
+docker run --rm -v "$(pwd):/iac-repo" "${IMAGE}:${TAG}" <guacamole-cmd> -p /iac-repo
+```
+
 ## Usage
 
 Three modes currently exist :

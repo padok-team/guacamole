@@ -13,7 +13,8 @@ import (
 func LayerStaticChecks() []data.Check {
 	// Add static checks here
 	checks := map[string]func() (data.Check, error){
-		"Dry": Dry,
+		"TG_DRY_001": Dry,
+		"TG_QUA_001": CodeQualityTg,
 	}
 
 	var checkResults []data.Check
@@ -24,17 +25,18 @@ func LayerStaticChecks() []data.Check {
 	c := make(chan data.Check, len(checks))
 	defer close(c)
 
-	for _, checkFunction := range checks {
-		go func(checkFunction func() (data.Check, error)) {
+	for name, checkFunction := range checks {
+		go func(name string, checkFunction func() (data.Check, error)) {
 			defer wg.Done()
-
+			log.Debugf("[ %s ] Running", name)
 			check, err := checkFunction()
 			if err != nil {
-				log.Error(err)
+				log.Errorf("[ %s ] Failed: %v", name, err)
 				os.Exit(1)
 			}
+			log.Debugf("[ %s ] status=%s, errors=%d", name, check.Status, len(check.Errors))
 			c <- check
-		}(checkFunction)
+		}(name, checkFunction)
 	}
 
 	wg.Wait()
