@@ -8,18 +8,16 @@ func VarContainsDescription(modules map[string]data.TerraformModule) (data.Check
 	dataCheck := data.Check{
 		ID:                "TF_VAR_001",
 		Name:              "Variable should contain a description",
-		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#variables",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables",
 		Status:            "✅",
 	}
 
 	variablesInError := []data.Error{}
 
-	// For each module, check if the provider is defined
+	// For each module, check that all variables have a non-empty description
 	for _, module := range modules {
 		moduleConf := module.ModuleConfig
-		// Check if the name of the resource is not in snake case
 		for _, variable := range moduleConf.Variables {
-			// I want to check if the name of the resource contains any word (separated by a dash) of its type
 			if variable.Description == "" {
 				variablesInError = append(variablesInError, data.Error{
 					Path:        variable.Pos.Filename,
