@@ -12,14 +12,12 @@ func OutputContainsDescription(modules map[string]data.TerraformModule) (data.Ch
 		Status:            "✅",
 	}
 
-	outputsInError := []data.Error{}
-
 	// For each module, check that all outputs have a non-empty description
 	for _, module := range modules {
 		moduleConf := module.ModuleConfig
 		for _, output := range moduleConf.Outputs {
 			if output.Description == "" {
-				outputsInError = append(outputsInError, data.Error{
+				dataCheck.Errors = append(dataCheck.Errors, data.Error{
 					Path:        output.Pos.Filename,
 					LineNumber:  output.Pos.Line,
 					Description: output.Name,
@@ -28,9 +26,7 @@ func OutputContainsDescription(modules map[string]data.TerraformModule) (data.Ch
 		}
 	}
 
-	dataCheck.Errors = outputsInError
-
-	if len(outputsInError) > 0 {
+	if len(dataCheck.Errors) > 0 {
 		dataCheck.Status = "❌"
 	}
 
