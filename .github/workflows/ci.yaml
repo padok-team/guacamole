@@ -36,6 +36,11 @@ jobs:
           echo "BUILD_TIMESTAMP=$(date +'%s')" >> $GITHUB_ENV
           echo "VERSION=$( echo ${{ github.head_ref || github.ref_name }} | tr '/' '-' )" >> $GITHUB_ENV
 
+      - name: Load CLI versions
+        run: |
+          echo "TERRAFORM_VERSION=$(awk '$1 == "terraform" {print $2}' .tool-versions)" >> "$GITHUB_ENV"
+          echo "TERRAGRUNT_VERSION=$(awk '$1 == "terragrunt" {print $2}' .tool-versions)" >> "$GITHUB_ENV"
+
       - name: Build and push
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
@@ -44,6 +49,8 @@ jobs:
             VERSION=${{ env.VERSION }}
             BUILD_TIMESTAMP=${{ env.BUILD_TIMESTAMP }}
             COMMIT_HASH=${{ github.sha }}
+            TERRAFORM_VERSION=${{ env.TERRAFORM_VERSION }}
+            TERRAGRUNT_VERSION=${{ env.TERRAGRUNT_VERSION }}
           tags: |
             ghcr.io/${{ github.repository }}:${{ env.VERSION }}
             ghcr.io/${{ github.repository }}:${{ github.sha }}

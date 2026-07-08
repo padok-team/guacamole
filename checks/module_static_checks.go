@@ -14,16 +14,17 @@ import (
 func ModuleStaticChecks() []data.Check {
 	// Add static checks here
 	checks := map[string]func(m map[string]data.TerraformModule) (data.Check, error){
-		"ProviderInModule":       ProviderInModule,
-		"Stuttering":             Stuttering,
-		"SnakeCase":              SnakeCase,
-		"VarContainsDescription": VarContainsDescription,
-		"VarNumberMatchesType":   VarNumberMatchesType,
-		"VarTypeAny":             VarTypeAny,
-		"RemoteModuleVersion":    RemoteModuleVersion,
-		"RequiredProviderVersionOperatorInModules": RequiredProviderVersionOperatorInModules,
-		"ResourceNamingThisThese":                  ResourceNamingThisThese,
-		"ResourceNaming":                           ResourceNaming,
+		"TF_MOD_001": RemoteModuleVersion,
+		"TF_MOD_002": ProviderInModule,
+		"TF_MOD_003": RequiredProviderVersionOperatorInModules,
+		"TF_NAM_001": ResourceNamingThisThese,
+		"TF_NAM_002": SnakeCase,
+		"TF_NAM_003": Stuttering,
+		"TF_NAM_004": VarNumberMatchesType,
+		"TF_NAM_005": ResourceNaming,
+		"TF_VAR_001": VarContainsDescription,
+		"TF_VAR_002": VarTypeAny,
+		"TF_QUA_001": CodeQualityTf,
 	}
 
 	var checkResults []data.Check
@@ -40,28 +41,30 @@ func ModuleStaticChecks() []data.Check {
 	c := make(chan data.Check, len(checks))
 	defer close(c)
 
-	for _, checkFunction := range checks {
-		go func(checkFunction func(m map[string]data.TerraformModule) (data.Check, error)) {
+	for name, checkFunction := range checks {
+		go func(name string, checkFunction func(m map[string]data.TerraformModule) (data.Check, error)) {
 			defer wg.Done()
+			log.Debugf("[ %s ] Running", name)
 			check, err := checkFunction(modules)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("[ %s ] Failed: %v", name, err)
 				os.Exit(1)
 			}
+			log.Debugf("[ %s ] status=%s, errors=%d", name, check.Status, len(check.Errors))
 			// Apply ignore on Terraform code blocks checks errors
 			// This only cover Terraform resources that have a POS attribute
 			for i := len(check.Errors) - 1; i >= 0; i-- {
-				log.Debugf("Processing ignore for check %s (error index: %d)", check.ID, i)
+				log.Debugf("   [ %s ] Processing ignore (error index: %d)", check.ID, i)
 				originalCheck := check
 				check, _ = helpers.ApplyIgnoreOnCodeBlock(check, i, modules)
 				if len(originalCheck.Errors) > len(check.Errors) {
-					log.Debugf("Check %s was ignored by code block rule", check.ID)
+					log.Debugf("   [ %s ] Ignored by code block rule", check.ID)
 				}
 
 				originalCheck = check
 				check, _ = helpers.ApplyIgnoreOnModule(check, i, modules)
 				if len(originalCheck.Errors) > len(check.Errors) {
-					log.Debugf("Check %s was ignored by module rule", check.ID)
+					log.Debugf("   [ %s ] Ignored by module rule", check.ID)
 				}
 			}
 			// Replace the check error status with the array after ignoreing
@@ -69,7 +72,7 @@ func ModuleStaticChecks() []data.Check {
 				check.Status = "✅"
 			}
 			c <- check
-		}(checkFunction)
+		}(name, checkFunction)
 	}
 
 	wg.Wait()
