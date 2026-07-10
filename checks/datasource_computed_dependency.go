@@ -26,7 +26,7 @@ func DataSourceComputedDependency(modules map[string]data.TerraformModule) (data
 	dataCheck := data.Check{
 		ID:                "TF_DAT_001",
 		Name:              "Data source should not depend on a value computed during apply",
-		RelatedGuidelines: "https://developer.hashicorp.com/terraform/language/data-sources#data-source-behavior",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#data-sources-depending-on-values-only-known-at-apply-time",
 		Status:            "✅",
 	}
 
