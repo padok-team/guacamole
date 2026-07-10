@@ -14,13 +14,14 @@ import (
 func ModuleStaticChecks() []data.Check {
 	// Add static checks here
 	checks := map[string]func(m map[string]data.TerraformModule) (data.Check, error){
-		"ProviderInModule":       ProviderInModule,
-		"Stuttering":             Stuttering,
-		"SnakeCase":              SnakeCase,
-		"VarContainsDescription": VarContainsDescription,
-		"VarNumberMatchesType":   VarNumberMatchesType,
-		"VarTypeAny":             VarTypeAny,
-		"RemoteModuleVersion":    RemoteModuleVersion,
+		"ProviderInModule":                         ProviderInModule,
+		"Stuttering":                               Stuttering,
+		"SnakeCase":                                SnakeCase,
+		"VarContainsDescription":                   VarContainsDescription,
+		"OutputContainsDescription":                OutputContainsDescription,
+		"VarNumberMatchesType":                     VarNumberMatchesType,
+		"VarTypeAny":                               VarTypeAny,
+		"RemoteModuleVersion":                      RemoteModuleVersion,
 		"RequiredProviderVersionOperatorInModules": RequiredProviderVersionOperatorInModules,
 		"ResourceNamingThisThese":                  ResourceNamingThisThese,
 		"ResourceNaming":                           ResourceNaming,

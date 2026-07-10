@@ -4,6 +4,21 @@ A CLI tool that runs opinionated quality checks on your IaC codebase.
 
 Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-guidelines/) for more information on the quality checks.
 
+## Table of Contents
+
+- [Install](#install)
+  - [With Homebrew](#with-homebrew)
+  - [From binary](#from-binary)
+  - [From GitHub](#from-github)
+- [Usage](#usage)
+  - [Skipping individual checks](#skipping-individual-checks)
+- [List of checks](#list-of-checks)
+  - [Static module check for Terraform](#static-module-check-for-terraform)
+  - [Static layer check for Terragrunt](#static-layer-check-for-terragrunt)
+  - [State](#state)
+- [Demo](#demo)
+- [License](#license)
+
 ## Install
 
 ### With Homebrew
@@ -12,7 +27,26 @@ Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-gui
 
 ```bash
 brew tap padok-team/tap
+brew trust padok-team/tap
 brew install guacamole
+```
+
+### From binary
+
+Download and install the latest binary in one command:
+
+```bash
+OS=$(uname -s | tr '[:upper:]' '[:lower:]') \
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
+VERSION=$(curl -s https://api.github.com/repos/padok-team/guacamole/releases/latest | grep tag_name | cut -d '"' -f 4) \
+&& curl -L "https://github.com/padok-team/guacamole/releases/download/${VERSION}/guacamole_${OS}_${ARCH}" -o /usr/local/bin/guacamole \
+&& chmod +x /usr/local/bin/guacamole
+```
+
+Verify the install:
+
+```bash
+guacamole version
 ```
 
 ### From GitHub
@@ -116,6 +150,7 @@ You can specify the path of the `.guacamoleignore` file with the `-w` flag.
 
 - `TG_DRY_001` - [No duplicate inputs within a layer](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html#%EF%B8%8F-context)
 - `TG_INP_001` - Terragrunt inputs should match variables declared in the called module and none should be unused
+- `TG_ARC_001` - [terragrunt.hcl should be the last layer to apply](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html)
 
 ### State
 

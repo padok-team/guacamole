@@ -15,6 +15,7 @@ func LayerStaticChecks() []data.Check {
 	checks := map[string]func() (data.Check, error){
 		"Dry": Dry,
 		"UnusedInputs": UnusedInputs,
+		"TerragruntLeafLayer": TerragruntLeafLayer,
 	}
 
 	var checkResults []data.Check

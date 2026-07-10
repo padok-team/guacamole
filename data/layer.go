@@ -1,14 +1,16 @@
 package data
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 )
 
@@ -37,58 +39,74 @@ type moduleDepthWarning struct {
 
 func (l *Layer) ComputePlan() {
 	dirPath := "/tmp/" + strings.ReplaceAll(l.Name, "/", "_")
+	planFile := dirPath + "_plan.json"
 
-	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
-	if err != nil {
-		log.Info("failed to create Terraform instance: ", err)
-	}
-
-	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
+	_, err := os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
 	if os.IsNotExist(err) {
-		err = tf.Init(context.Background())
-		if err != nil {
-			log.Error(err)
+		initCmd := exec.CommandContext(context.Background(), "terragrunt", "init")
+		initCmd.Dir = l.FullPath
+		if out, initErr := initCmd.CombinedOutput(); initErr != nil {
+			log.Error(string(out))
 			os.Exit(1)
 		}
 	}
 
 	// Don't lock the state file while running the plan
-	_, err = tf.Plan(context.Background(), tfexec.Out(dirPath+"_plan.json"), tfexec.Lock(false))
-	if err != nil {
-		log.Info("failed to create plan: ", err)
+	planCmd := exec.CommandContext(context.Background(), "terragrunt", "plan", "-out="+planFile, "-lock=false")
+	planCmd.Dir = l.FullPath
+	if out, planErr := planCmd.CombinedOutput(); planErr != nil {
+		log.Info("failed to create plan: ", string(out))
 	}
 
 	// Create JSON plan
-	jsonPlan, err := tf.ShowPlanFile(context.Background(), dirPath+"_plan.json")
-	if err != nil {
-		log.Info("failed to create JSON plan: ", err)
+	showCmd := exec.CommandContext(context.Background(), "terragrunt", "show", "-json", planFile)
+	showCmd.Dir = l.FullPath
+	var showOut, showErr bytes.Buffer
+	showCmd.Stdout = &showOut
+	showCmd.Stderr = &showErr
+	if err := showCmd.Run(); err != nil {
+		log.Infof("failed to create JSON plan: %s\n%s", err, showErr.String())
+		return
 	}
 
-	l.Plan = jsonPlan
+	var plan tfjson.Plan
+	if err := json.Unmarshal(showOut.Bytes(), &plan); err != nil {
+		log.Info("failed to parse JSON plan: ", err)
+		return
+	}
+
+	l.Plan = &plan
 }
 
 func (l *Layer) ComputeState() {
-	tf, err := tfexec.NewTerraform(l.FullPath, "terragrunt")
-	if err != nil {
-		log.Info("failed to create Terraform instance: ", err)
-	}
-
-	_, err = os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
+	_, err := os.Stat(filepath.Join(l.FullPath, ".terragrunt-cache"))
 	if os.IsNotExist(err) {
-		err = tf.Init(context.Background())
-		if err != nil {
-			log.Error(err)
+		initCmd := exec.CommandContext(context.Background(), "terragrunt", "init")
+		initCmd.Dir = l.FullPath
+		if out, initErr := initCmd.CombinedOutput(); initErr != nil {
+			log.Error(string(out))
 			os.Exit(1)
 		}
 	}
 
 	// Create Terraform state file
-	state, err := tf.Show(context.TODO())
-	if err != nil {
-		log.Info("failed to create state: %s", err)
+	showCmd := exec.CommandContext(context.Background(), "terragrunt", "show", "-json")
+	showCmd.Dir = l.FullPath
+	var showOut, showErr bytes.Buffer
+	showCmd.Stdout = &showOut
+	showCmd.Stderr = &showErr
+	if err := showCmd.Run(); err != nil {
+		log.Infof("failed to create state: %s\n%s", err, showErr.String())
+		return
 	}
 
-	l.State = state
+	var state tfjson.State
+	if err := json.Unmarshal(showOut.Bytes(), &state); err != nil {
+		log.Infof("failed to parse state: %s", err)
+		return
+	}
+
+	l.State = &state
 }
 
 func (layer *Layer) BuildRootModule() {
@@ -96,7 +114,7 @@ func (layer *Layer) BuildRootModule() {
 		layer.ComputeState()
 	}
 
-	if layer.State.Values != nil {
+	if layer.State != nil && layer.State.Values != nil {
 		layer.RootModule = &Module{
 			Address:     "root",
 			Name:        "root",
