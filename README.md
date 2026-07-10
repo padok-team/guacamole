@@ -27,6 +27,7 @@ Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-gui
 
 ```bash
 brew tap padok-team/tap
+brew trust padok-team/tap
 brew install guacamole
 ```
 
