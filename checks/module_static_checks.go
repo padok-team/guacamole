@@ -25,6 +25,7 @@ func ModuleStaticChecks() []data.Check {
 		"RequiredProviderVersionOperatorInModules": RequiredProviderVersionOperatorInModules,
 		"ResourceNamingThisThese":                  ResourceNamingThisThese,
 		"ResourceNaming":                           ResourceNaming,
+		"DataSourceComputedDependency":             DataSourceComputedDependency,
 	}
 
 	var checkResults []data.Check
