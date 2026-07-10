@@ -43,11 +43,23 @@ tests/
 > directory as its download dir and silently skips it, so
 > `guacamole static layer` finds **0 layers** when you run it from the repo root
 > against `./tests`. This only affects local runs from the repo; in real usage
-> the scanned codebase is a separate directory. See `test-version.sh`, which
-> bakes these fixtures into the image at `/tests`.
+> the scanned codebase is a separate directory.
+>
+> The easiest way to avoid this is to run the fixtures inside the Docker test
+> image, where they are baked in at `/tests` and the working directory is
+> unrelated. See [`scripts/docker-test-version.sh`](../scripts/docker-test-version.sh)
+> and its [README](../scripts/README.md).
 
 ```bash
-# From the repo root, point at an absolute path from a neutral CWD:
+# Option A — run inside the Docker test image (fixtures baked in at /tests):
+./scripts/docker-test-version.sh
+# then, inside the container:
+guacamole static module -p /tests/modules/pass    # expect: all ✅ (100%)
+guacamole static module -p /tests/modules/fail -v # expect: every check ❌
+guacamole static layer  -p /tests/layers/pass     # expect: TG_DRY_001 ✅
+guacamole static layer  -p /tests/layers/fail     # expect: TG_DRY_001 ❌
+
+# Option B — run the local binary from a neutral CWD, using an absolute path:
 cd /tmp
 guacamole static module -p /path/to/guacamole/tests/modules/pass   # expect: all ✅ (100%)
 guacamole static module -p /path/to/guacamole/tests/modules/fail   # expect: every check ❌
