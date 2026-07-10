@@ -43,26 +43,21 @@ func UnusedInputs() (data.Check, error) {
 	errors := []data.Error{}
 
 	for _, layerPath := range layers {
-		layerConfig, err := parseTerragruntLayerInputs(layerPath)
+		source, inputs, err := resolveLayerSourceAndInputs(layerPath)
 		if err != nil {
 			return dataCheck, err
 		}
 
-		if layerConfig.Terraform == nil || layerConfig.Terraform.Source == nil {
+		// Skip layers that don't point to a module or don't set any input.
+		if source == nil || len(inputs) == 0 {
 			continue
 		}
 
-		if layerConfig.Inputs == nil {
+		if isRemoteTerraformSource(*source) {
 			continue
 		}
 
-		source := *layerConfig.Terraform.Source
-
-		if isRemoteTerraformSource(source) {
-			continue
-		}
-
-		modulePath := resolveTerraformModulePath(layerPath, source)
+		modulePath := resolveTerraformModulePath(layerPath, *source)
 
 		module, err := helpers.LoadModule(modulePath)
 		if err != nil {
@@ -75,7 +70,7 @@ func UnusedInputs() (data.Check, error) {
 			declaredVariables[name] = true
 		}
 
-		for inputName := range layerConfig.Inputs.AsValueMap() {
+		for inputName := range inputs {
 			if declaredVariables[inputName] {
 				continue
 			}
@@ -101,22 +96,56 @@ func UnusedInputs() (data.Check, error) {
 	return dataCheck, nil
 }
 
-func parseTerragruntLayerInputs(layerPath string) (TerragruntLayerInputs, error) {
-	var layerConfig TerragruntLayerInputs
+// resolveLayerSourceAndInputs resolves a Terragrunt layer the way Terragrunt
+// itself composes it: it follows the layer's include blocks and merges every
+// file that makes up the layer. This matters because most codebases use the
+// "context pattern", where the terraform{} block and the inputs live in
+// separate included files (module.hcl, inputs.hcl, ...) rather than directly in
+// the layer's terragrunt.hcl. Parsing terragrunt.hcl in isolation would find
+// neither, and the check would silently pass for every layer.
+//
+// It returns the resolved module source (if any) and the union of the input
+// names declared across all of the layer's files.
+func resolveLayerSourceAndInputs(layerPath string) (*string, map[string]cty.Value, error) {
+	// Discover every file that composes the layer: the terragrunt.hcl plus all
+	// of its processed includes. findFilesInLayers is shared with the Dry check.
+	files, err := findFilesInLayers(layerPath)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	parser := hclparse.NewParser()
 
-	hclFile, err := parser.ParseHCLFile(layerPath)
-	if err != nil {
-		return layerConfig, err
+	var source *string
+	inputs := map[string]cty.Value{}
+
+	for _, file := range files {
+		hclFile, diags := parser.ParseHCLFile(file)
+		if diags.HasErrors() {
+			return nil, nil, diags
+		}
+
+		var layerConfig TerragruntLayerInputs
+		// Each file only defines a subset of the layer (include/locals/dependency
+		// blocks live elsewhere), so we deliberately ignore the strict-decoding
+		// diagnostics and merge whatever terraform.source / inputs each file sets.
+		_ = gohcl.DecodeBody(hclFile.Body, nil, &layerConfig)
+
+		if layerConfig.Terraform != nil && layerConfig.Terraform.Source != nil {
+			source = layerConfig.Terraform.Source
+		}
+
+		if layerConfig.Inputs != nil {
+			value := *layerConfig.Inputs
+			if value.Type().IsObjectType() || value.Type().IsMapType() {
+				for name, v := range value.AsValueMap() {
+					inputs[name] = v
+				}
+			}
+		}
 	}
 
-	diags := gohcl.DecodeBody(hclFile.Body, nil, &layerConfig)
-	if diags.HasErrors() {
-		return layerConfig, diags
-	}
-
-	return layerConfig, nil
+	return source, inputs, nil
 }
 
 func resolveTerraformModulePath(layerPath string, source string) string {
