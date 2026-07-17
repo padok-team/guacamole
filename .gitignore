@@ -7,3 +7,5 @@ guacamole
 # Ignore modifications on examples
 example/
 .vscode/
+
+graphify-out/
