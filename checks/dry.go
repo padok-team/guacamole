@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gruntwork-io/terragrunt/config"
-	"github.com/gruntwork-io/terragrunt/options"
+	"github.com/gruntwork-io/terragrunt/pkg/config"
+	"github.com/gruntwork-io/terragrunt/pkg/log"
+	"github.com/gruntwork-io/terragrunt/pkg/options"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/padok-team/guacamole/data"
@@ -71,13 +72,10 @@ func findFilesInLayers(path string) ([]string, error) {
 	options, _ := options.NewTerragruntOptionsWithConfigPath(path)
 	options.OriginalTerragruntConfigPath = path
 	// Parse the file with PartialParseConfigFile which parse all essential block, in our case local and include
-	// https://github.com/gruntwork-io/terragrunt/blob/master/config/config_partial.go#L147
-	// terragruntConfig, err := config.PartialParseConfigFile(path, options, nil, []config.PartialDecodeSectionType{
-	// 	config.DependenciesBlock,
-	// 	config.DependencyBlock,
-	// })
-	configContext := config.NewParsingContext(context.Background(), options)
-	terragruntConfig, err := config.PartialParseConfigFile(configContext, path, nil)
+	// https://github.com/gruntwork-io/terragrunt/blob/master/pkg/config/config_partial.go
+	logger := log.Default()
+	ctx, configContext := config.NewParsingContext(context.Background(), logger, options)
+	terragruntConfig, err := config.PartialParseConfigFile(ctx, configContext, logger, path, nil)
 	if err != nil {
 		fmt.Println("Error parsing file", err.Error())
 		return files, err
