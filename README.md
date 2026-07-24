@@ -150,6 +150,7 @@ You can specify the path of the `.guacamoleignore` file with the `-w` flag.
 
 - `TG_DRY_001` - [No duplicate inputs within a layer](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html#%EF%B8%8F-context)
 - `TG_ARC_001` - [terragrunt.hcl should be the last layer to apply](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html)
+- `TG_LOC_001` - Terragrunt locals should not be declared if it is not worthly used
 
 ### State
 
