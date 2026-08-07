@@ -13,8 +13,8 @@ import (
 func LayerStaticChecks() []data.Check {
 	// Add static checks here
 	checks := map[string]func() (data.Check, error){
-		"Dry":                	Dry,
-		"TerragruntLeafLayer": 	TerragruntLeafLayer,
+		"Dry":                  Dry,
+		"TerragruntLeafLayer":  TerragruntLeafLayer,
 		"LocalIsUseful":      	LocalIsUseful,
 	}
 
