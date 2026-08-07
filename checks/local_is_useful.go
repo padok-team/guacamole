@@ -1,9 +1,12 @@
 package checks
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
@@ -21,7 +24,7 @@ import (
 // simple alias should be inlined instead of being declared as a local.
 func LocalIsUseful() (data.Check, error) {
 	dataCheck := data.Check{
-		ID:                "TG_LOC_001",
+		ID:                "TG_DRY_002",
 		Name:              "A local should only be defined if it is reused (DRY) or abstracts complexity",
 		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html",
 		Status:            "✅",
@@ -46,9 +49,11 @@ func LocalIsUseful() (data.Check, error) {
 			return nil
 		}
 
+		log.Debugf("[TG_DRY_002] scanning %s", path)
 		fileErrors, checkErr := checkLocalsInFile(path)
 		if checkErr != nil {
-			return checkErr
+			log.Warnf("[TG_DRY_002] skipping %s: %s", path, checkErr)
+			return nil
 		}
 		errorsFound = append(errorsFound, fileErrors...)
 
@@ -80,6 +85,12 @@ func checkLocalsInFile(path string) ([]data.Error, error) {
 		return nil, fmt.Errorf("failed to read %s: %w", path, err)
 	}
 
+	// Skip files with no locals block without paying the cost of a full HCL parse.
+	if !bytes.Contains(src, []byte("locals")) {
+		log.Debugf("[TG_DRY_002] no locals keyword in %s, skipping", path)
+		return nil, nil
+	}
+
 	parser := hclparse.NewParser()
 	file, diags := parser.ParseHCL(src, path)
 	if diags.HasErrors() {
@@ -107,16 +118,21 @@ func checkLocalsInFile(path string) ([]data.Error, error) {
 	}
 
 	if len(localDefs) == 0 {
+		log.Debugf("[TG_DRY_002] no locals in %s, skipping", path)
 		return nil, nil
 	}
+	log.Debugf("[TG_DRY_002] found %d local(s) in %s", len(localDefs), path)
 
 	// Count how many times each local is referenced across the whole file.
-	usage := countLocalReferences(body)
+	usage := map[string]int{}
+	countLocalReferences(body, usage)
 
 	fileErrors := []data.Error{}
 	for _, def := range localDefs {
 		reused := usage[def.name] > 1
 		abstractsComplexity := mergesMultipleInputs(def.expr)
+
+		log.Debugf("[TG_DRY_002] local %q: used=%d reused=%v abstractsComplexity=%v", def.name, usage[def.name], reused, abstractsComplexity)
 
 		if reused || abstractsComplexity {
 			continue
@@ -137,36 +153,20 @@ func checkLocalsInFile(path string) ([]data.Error, error) {
 
 // countLocalReferences walks every attribute of the body (recursively into
 // nested blocks) and counts the `local.<name>` traversals it references.
-func countLocalReferences(body *hclsyntax.Body) map[string]int {
-	usage := map[string]int{}
-
-	for _, expr := range collectAttributeExpressions(body) {
-		for _, traversal := range expr.Variables() {
+func countLocalReferences(body *hclsyntax.Body, usage map[string]int) {
+	for _, attr := range body.Attributes {
+		for _, traversal := range attr.Expr.Variables() {
 			if traversal.RootName() != "local" || len(traversal) < 2 {
 				continue
 			}
-			if attrStep, ok := traversal[1].(hcl.TraverseAttr); ok {
-				usage[attrStep.Name]++
+			if step, ok := traversal[1].(hcl.TraverseAttr); ok {
+				usage[step.Name]++
 			}
 		}
 	}
-
-	return usage
-}
-
-// collectAttributeExpressions returns the expressions of every attribute in the
-// body, descending into nested blocks.
-func collectAttributeExpressions(body *hclsyntax.Body) []hclsyntax.Expression {
-	exprs := []hclsyntax.Expression{}
-
-	for _, attr := range body.Attributes {
-		exprs = append(exprs, attr.Expr)
-	}
 	for _, block := range body.Blocks {
-		exprs = append(exprs, collectAttributeExpressions(block.Body)...)
+		countLocalReferences(block.Body, usage)
 	}
-
-	return exprs
 }
 
 // mergesMultipleInputs reports whether a local's value abstracts complexity,
