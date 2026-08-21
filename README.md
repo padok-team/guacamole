@@ -145,6 +145,7 @@ You can specify the path of the `.guacamoleignore` file with the `-w` flag.
 - `TF_NAM_005` - [Resources and data sources should not be named \"this\" or \"these\" if there are more than 1 of the same type](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
 - `TF_VAR_001` - [Variable should contain a description](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#variables)
 - `TF_VAR_002` - [Variable should declare a specific type](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-type-any-in-variables)
+- `TF_DAT_001` - [Data source should not depend on a value computed during apply](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#data-sources-depending-on-values-only-known-at-apply-time)
 
 ### Static layer check for Terragrunt
 
