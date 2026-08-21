@@ -95,6 +95,29 @@ Three modes currently exist :
   guacamole profile -p /path/to/your/codebase
   ```
 
+- CI mode: detects changed Terraform/Terragrunt directories from your Git diff, runs scoped static checks and can post a GitLab MR comment.
+
+  ```bash
+  guacamole ci
+  ```
+
+  Required CI environment:
+
+  - `GUACAMOLE_DIFF_BASE_BRANCH` or `CI_MERGE_REQUEST_TARGET_BRANCH_NAME`
+  - Optional `GUACAMOLE_MR_SHA` (defaults to `HEAD`)
+  - Optional `CI_PROJECT_DIR` (defaults to current directory)
+
+  To disable GitLab comment posting, set:
+
+  - `GUACAMOLE_CI_COMMENT=false`
+
+  To post a GitLab MR comment, ensure these variables are set:
+
+  - `CI_MERGE_REQUEST_IID`
+  - `CI_API_V4_URL`
+  - `CI_PROJECT_ID`
+  - `GUACAMOLE_GITLAB_TOKEN`
+
 A verbose mode (`-v`) exists to add more information to the output.
 
 ### Skipping individual checks
