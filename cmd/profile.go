@@ -21,6 +21,7 @@ import (
 var profile = &cobra.Command{
 	Use:   "profile",
 	Short: "[EXPERIMENTAL] Display informations about resources and datasources contained in the codebase",
+	Args:  noArgs,
 	Long: `[EXPERIMENTAL] Display informations about resources and datasources contained in the codebase
 ⚠️ WARNING: This command may fail in unexpected way if all the layers you want to check are not initialized properly.
 `,
