@@ -18,6 +18,7 @@ import (
 var static = &cobra.Command{
 	Use:    "static",
 	Short:  "Run static code checks",
+	Args:   noArgs,
 	PreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Warn("You can specify what you want to check : layer or module")

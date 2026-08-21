@@ -17,6 +17,7 @@ import (
 var layerCmd = &cobra.Command{
 	Use:    "layer",
 	Short:  "Run static code checks on layers, it can be ran on a unique layer or at the root of your repo",
+	Args:   noArgs,
 	PreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		l := log.New(os.Stderr, "", 0)

@@ -17,6 +17,7 @@ import (
 var moduleCmd = &cobra.Command{
 	Use:    "module",
 	Short:  "Run static code checks on modules",
+	Args:   noArgs,
 	PreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		l := log.New(os.Stderr, "", 0)
