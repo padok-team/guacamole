@@ -49,7 +49,16 @@ func UnusedInputs() (data.Check, error) {
 		}
 
 		// Skip layers that don't point to a module or don't set any input.
-		if source == nil || len(inputs) == 0 {
+		//
+		// An empty (but non-nil) source happens when terraform.source is written
+		// with a Terragrunt function (get_repo_root(), find_in_parent_folders(), ...):
+		// gohcl.DecodeBody is called with a nil EvalContext, so the function call
+		// can't be evaluated, but the *string destination still gets allocated to ""
+		// before the "value must be known" decode error is raised. Without this
+		// guard, that "" would resolve to the layer's own directory in
+		// resolveTerraformModulePath, and every input would be wrongly flagged as
+		// undeclared.
+		if source == nil || *source == "" || len(inputs) == 0 {
 			continue
 		}
 
