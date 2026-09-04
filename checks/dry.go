@@ -9,6 +9,7 @@ import (
 
 	"github.com/gruntwork-io/terragrunt/pkg/config"
 	"github.com/gruntwork-io/terragrunt/pkg/log"
+	"github.com/gruntwork-io/terragrunt/pkg/log/format"
 	"github.com/gruntwork-io/terragrunt/pkg/options"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
@@ -73,7 +74,9 @@ func findFilesInLayers(path string) ([]string, error) {
 	options.OriginalTerragruntConfigPath = path
 	// Parse the file with PartialParseConfigFile which parse all essential block, in our case local and include
 	// https://github.com/gruntwork-io/terragrunt/blob/master/pkg/config/config_partial.go
-	logger := log.Default()
+	formatter := format.NewFormatter(format.NewKeyValueFormatPlaceholders())
+	formatter.SetDisabledColors(true)
+	logger := log.New(log.WithFormatter(formatter))
 	ctx, configContext := config.NewParsingContext(context.Background(), logger, options)
 	terragruntConfig, err := config.PartialParseConfigFile(ctx, configContext, logger, path, nil)
 	if err != nil {
