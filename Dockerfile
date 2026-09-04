@@ -1,5 +1,6 @@
 # Build the guacamole binary
-FROM docker.io/library/golang:1.26.5@sha256:63f132d58c1f589f0dcda584933a9bb44bfda1150f1506377f5a902f34d86033 as builder
+# BUILDPLATFORM keeps the builder on the native runner arch; Go cross-compiles to TARGETARCH.
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.26.8@sha256:9d2f36f06329b2a141b9db99ffa32765cf695ee57b813ca29e245e8670bcbfff AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG PACKAGE=github.com/padok-team/guacamole
