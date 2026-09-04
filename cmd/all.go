@@ -16,6 +16,7 @@ import (
 var allCmd = &cobra.Command{
 	Use:    "all",
 	Short:  "Run all checks",
+	Args:   noArgs,
 	PreRun: toggleDebug,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("Running all checks...")
