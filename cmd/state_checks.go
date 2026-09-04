@@ -20,6 +20,7 @@ import (
 var state = &cobra.Command{
 	Use:   "state",
 	Short: "[EXPERIMENTAL] Run state-related checks",
+	Args:  noArgs,
 	Long: `[EXPERIMENTAL] Run state-related checks
 ⚠️ WARNING: This command may fail in unexpected way if all the layers you want to check are not initialized properly.
 	`,
