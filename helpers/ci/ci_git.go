@@ -81,7 +81,10 @@ func mapKeysSorted(set map[string]struct{}) []string {
 
 func runGit(projectDir string, args ...string) (string, error) {
 	log.WithFields(log.Fields{"dir": projectDir, "args": strings.Join(args, " ")}).Debug("Running git command")
-	cmd := exec.Command("git", args...)
+	// CI runners often check out repos as a different user, which trips git's
+	// "dubious ownership" safety check; scope the exception to this invocation only.
+	safeArgs := append([]string{"-c", "safe.directory=" + projectDir}, args...)
+	cmd := exec.Command("git", safeArgs...)
 	cmd.Dir = projectDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {

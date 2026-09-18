@@ -70,7 +70,7 @@ func buildCommentBody(results []result, overallScore, overallPass, overallTotal 
 	}
 
 	b.WriteString("\n")
-	b.WriteString(fmt.Sprintf("- Global score: %s %d%% (%d/%d)\n", scoreEmoji, overallScore, overallPass, overallTotal))
+	b.WriteString(fmt.Sprintf("Global score: %s %d%% (%d/%d)\n", scoreEmoji, overallScore, overallPass, overallTotal))
 	b.WriteString("\n")
 	b.WriteString("| Scope | Path | Score | Failed rules |\n")
 	b.WriteString("|---|---|---|---|\n")

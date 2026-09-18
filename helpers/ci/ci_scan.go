@@ -101,7 +101,22 @@ func summarizeChecks(checkResults []data.Check) (int, int, []string) {
 			continue
 		}
 		if c.Status == "❌" {
-			failing = append(failing, fmt.Sprintf("❌ %s - %s", c.ID, c.Name))
+			name := c.Name
+			if c.RelatedGuidelines != "" {
+				name = fmt.Sprintf("[%s](%s)", c.Name, c.RelatedGuidelines)
+			}
+			line := fmt.Sprintf("❌ %s - %s", c.ID, name)
+			for _, e := range c.Errors {
+				location := e.Path
+				if e.LineNumber != -1 {
+					location = fmt.Sprintf("%s:%d", e.Path, e.LineNumber)
+				}
+				line += fmt.Sprintf("<br>&nbsp;&nbsp;&nbsp;&nbsp;`%s`", location)
+				if e.Description != "" {
+					line += fmt.Sprintf(" - %s", e.Description)
+				}
+			}
+			failing = append(failing, line)
 		}
 	}
 
