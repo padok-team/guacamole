@@ -9,7 +9,7 @@ import (
 
 var ciCmd = &cobra.Command{
 	Use:          "ci",
-	Short:        "Run CI-oriented static checks and post an optional GitLab MR comment",
+	Short:        "Run CI-oriented static checks and post an optional GitLab MR or GitHub PR comment",
 	SilenceUsage: true,
 	PreRun:       toggleDebug,
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -69,7 +69,7 @@ func runScopeScan(scope scope, relDir, projectDir string) (result, bool, error) 
 		return result{}, false, logAndReturnErrorf("unsupported CI scope %s", scope)
 	}
 
-	passed, total, failing := summarizeChecks(checksResults)
+	passed, total, failing := summarizeChecks(checksResults, projectDir)
 	score := "n/a"
 	if total > 0 {
 		score = fmt.Sprintf("%d%%", scorePercent(passed, total))
@@ -91,7 +91,7 @@ func runScopeScan(scope scope, relDir, projectDir string) (result, bool, error) 
 	}, true, nil
 }
 
-func summarizeChecks(checkResults []data.Check) (int, int, []string) {
+func summarizeChecks(checkResults []data.Check, projectDir string) (int, int, []string) {
 	passed := 0
 	failing := []string{}
 
@@ -107,13 +107,13 @@ func summarizeChecks(checkResults []data.Check) (int, int, []string) {
 			}
 			line := fmt.Sprintf("❌ %s - %s", c.ID, name)
 			for _, e := range c.Errors {
-				location := e.Path
+				location := relativeToProject(e.Path, projectDir)
 				if e.LineNumber != -1 {
-					location = fmt.Sprintf("%s:%d", e.Path, e.LineNumber)
+					location = fmt.Sprintf("%s:%d", location, e.LineNumber)
 				}
 				line += fmt.Sprintf("<br>&nbsp;&nbsp;&nbsp;&nbsp;`%s`", location)
 				if e.Description != "" {
-					line += fmt.Sprintf(" - %s", e.Description)
+					line += fmt.Sprintf(" - %s", relativeToProject(e.Description, projectDir))
 				}
 			}
 			failing = append(failing, line)
@@ -121,6 +121,20 @@ func summarizeChecks(checkResults []data.Check) (int, int, []string) {
 	}
 
 	return passed, len(checkResults), failing
+}
+
+// relativeToProject strips the project directory from every path contained in
+// an error location, which may hold several paths (e.g. "a.tf and b.tf").
+func relativeToProject(location, projectDir string) string {
+	prefix := strings.TrimRight(filepath.ToSlash(projectDir), "/")
+	if prefix == "" {
+		return location
+	}
+	location = filepath.ToSlash(location)
+	if location == prefix {
+		return "."
+	}
+	return strings.ReplaceAll(location, prefix+"/", "")
 }
 
 func scorePercent(passed, total int) int {

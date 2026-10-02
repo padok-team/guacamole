@@ -8,7 +8,7 @@ func Run() (int, error) {
 		return 0, err
 	}
 
-	layerDirs, moduleDirs, err := detectChangedDirs(cfg.projectDirAbs, cfg.baseBranch, cfg.mrSHA)
+	layerDirs, moduleDirs, err := detectDirs(cfg)
 	if err != nil {
 		return 0, err
 	}
@@ -26,13 +26,23 @@ func Run() (int, error) {
 	overallScore := scorePercent(totals.overallPass, totals.overallTotal)
 	fmt.Printf("CI summary: %d%% (%d/%d)\n", overallScore, totals.overallPass, totals.overallTotal)
 
+	body := buildCommentBody(results, overallScore, totals.overallPass, totals.overallTotal)
+
+	if cfg.platform == platformGithub {
+		writeGithubStepOutputs(body, overallScore, totals.overallPass, totals.overallTotal)
+	}
+
 	if cfg.postComment {
-		if err := postGitlabComment(results, overallScore, totals.overallPass, totals.overallTotal); err != nil {
+		post := postGitlabComment
+		if cfg.platform == platformGithub {
+			post = postGithubComment
+		}
+		if err := post(body); err != nil {
 			return 0, err
 		}
 	}
 
-	if totals.hasError {
+	if totals.hasError && cfg.failOnError {
 		return 1, nil
 	}
 
