@@ -1,0 +1,42 @@
+name: IaC score
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  iac-score:
+    name: IaC score on test fixtures
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+
+      - name: Build guacamole
+        run: go build -o "${RUNNER_TEMP}/guacamole" .
+
+      - name: Run guacamole ci on the test fixtures
+        # Terragrunt layer discovery skips layers located under the working
+        # directory, so run guacamole from outside the repository (see tests/README.md)
+        working-directory: ${{ runner.temp }}
+        env:
+          GUACAMOLE_PROJECT_DIR: ${{ github.workspace }}/tests
+          GUACAMOLE_CI_SCAN_ALL: "true"
+          # fail/ fixtures purposely break guidelines
+          GUACAMOLE_CI_FAIL_ON_ERROR: "false"
+          # Fork pull requests get a read-only token and cannot be commented
+          GUACAMOLE_CI_COMMENT: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          GUACAMOLE_GITHUB_TOKEN: ${{ github.token }}
+        run: '"${RUNNER_TEMP}/guacamole" ci'

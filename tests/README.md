@@ -94,6 +94,14 @@ guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_
 initialized layer with provider access, which cannot be reproduced with static
 fixtures.
 
+### On pull requests
+
+The [`iac-score`](../.github/workflows/iac-score.yaml) workflow builds
+Guacamole from the pull request and runs `guacamole ci` on every fixture of this
+folder. The result is posted as a PR comment: each `fail/` fixture should show
+its single ❌ and each `pass/` fixture 100%. When adding a check, add its
+fixtures here to see it covered in the comment.
+
 ## Isolation tricks
 
 Some checks overlap by nature, so a few fixtures use two resources of the same

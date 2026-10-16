@@ -11,6 +11,7 @@ Check the [IaC guild guidelines](https://padok-team.github.io/docs-terraform-gui
   - [From binary](#from-binary)
   - [From GitHub](#from-github)
 - [Usage](#usage)
+  - [Run in CI](#run-in-ci)
   - [Skipping individual checks](#skipping-individual-checks)
 - [List of checks](#list-of-checks)
   - [Static module check for Terraform](#static-module-check-for-terraform)
@@ -33,15 +34,18 @@ brew install guacamole
 
 ### From binary
 
-Download and install the latest binary in one command:
+Download and install the latest binary on Linux or macOS in one command:
 
 ```bash
 OS=$(uname -s | tr '[:upper:]' '[:lower:]') \
 ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
-VERSION=$(curl -s https://api.github.com/repos/padok-team/guacamole/releases/latest | grep tag_name | cut -d '"' -f 4) \
-&& curl -L "https://github.com/padok-team/guacamole/releases/download/${VERSION}/guacamole_${OS}_${ARCH}" -o /usr/local/bin/guacamole \
-&& chmod +x /usr/local/bin/guacamole
+VERSION=$(curl -fsSL https://api.github.com/repos/padok-team/guacamole/releases/latest | grep tag_name | cut -d '"' -f 4) \
+&& curl -fsSL "https://github.com/padok-team/guacamole/releases/download/${VERSION}/guacamole_${VERSION#v}_${OS}_${ARCH}.tar.gz" \
+  | tar -xz -C /tmp guacamole \
+&& sudo install /tmp/guacamole /usr/local/bin/guacamole
 ```
+
+To install a specific version, replace the `VERSION=...` line with `VERSION=v0.3.4` for example. Windows archives (`.zip`) are available on the [releases page](https://github.com/padok-team/guacamole/releases).
 
 Verify the install:
 
@@ -95,7 +99,94 @@ Three modes currently exist :
   guacamole profile -p /path/to/your/codebase
   ```
 
+- CI mode: detects changed Terraform/Terragrunt directories from your Git diff (layers under `layers/`, modules under `base/`, `functional/` or `modules/`), runs scoped static checks and can post a GitLab MR or GitHub PR comment.
+
+  ```bash
+  guacamole ci
+  ```
+
+  The platform is detected automatically: GitHub when `GITHUB_ACTIONS=true`, GitLab otherwise.
+
+  Required CI environment:
+
+  - `GUACAMOLE_DIFF_BASE_BRANCH`, `CI_MERGE_REQUEST_TARGET_BRANCH_NAME` (GitLab) or `GITHUB_BASE_REF` (GitHub)
+  - Optional `GUACAMOLE_MR_SHA` (defaults to `HEAD`)
+  - Optional `GUACAMOLE_PROJECT_DIR`, `CI_PROJECT_DIR` (GitLab) or `GITHUB_WORKSPACE` (GitHub) (defaults to current directory)
+
+  The Git history must contain the base branch: on GitHub, use `fetch-depth: 0` with `actions/checkout`. Paths are relative to the project directory, which can be a sub-directory of the repository.
+
+  Optional behaviour:
+
+  - `GUACAMOLE_CI_COMMENT=false` to disable comment posting
+  - `GUACAMOLE_CI_SCAN_ALL=true` to scan every tracked layer/module instead of the changed ones (no base branch needed)
+  - `GUACAMOLE_CI_FAIL_ON_ERROR=false` to exit with code 0 even when checks fail
+
+  To post a GitLab MR comment, ensure these variables are set:
+
+  - `CI_MERGE_REQUEST_IID`
+  - `CI_API_V4_URL`
+  - `CI_PROJECT_ID`
+  - `GUACAMOLE_GITLAB_TOKEN`
+
+  To post a GitHub PR comment, ensure these variables are set (the comment is updated in place on each run):
+
+  - `GITHUB_REPOSITORY` and `GITHUB_EVENT_PATH` (set by GitHub Actions), or `GUACAMOLE_GITHUB_PR_NUMBER` to target a PR explicitly
+  - `GUACAMOLE_GITHUB_TOKEN` or `GITHUB_TOKEN`, with the `pull-requests: write` permission
+  - Optional `GITHUB_API_URL` (defaults to `https://api.github.com`, useful for GitHub Enterprise Server)
+
+  On GitHub, the report is also written to the job summary and the `score`, `passed` and `total` step outputs are set. See [Run in CI](#run-in-ci) for ready-to-use configurations.
+
 A verbose mode (`-v`) exists to add more information to the output.
+
+### Run in CI
+
+#### GitHub Actions
+
+Use the [guacamole-action](https://github.com/padok-team/guacamole-action) with `check_type: ci` to post the IaC score of the layers/modules changed by a pull request as a PR comment, updated in place on each push:
+
+```yaml
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  guacamole:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # The base branch history is needed to compute the diff
+          fetch-depth: 0
+
+      - name: Run guacamole
+        uses: padok-team/guacamole-action@v2
+        with:
+          check_type: ci
+          # Pull requests opened from a fork get a read-only token: skip the comment for them
+          comment: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+```
+
+The action also supports `scan_all`, `fail_on_error`, `base_branch` and the other checks (`static`, `state`...): see its [README](https://github.com/padok-team/guacamole-action#inputs) and [examples](https://github.com/padok-team/guacamole-action/tree/main/examples).
+
+#### GitLab CI
+
+```yaml
+guacamole:
+  stage: test
+  image:
+    name: ghcr.io/padok-team/guacamole:v0.4.0
+    entrypoint: [""]
+  script:
+    - guacamole ci
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+```
+
+Set `GUACAMOLE_GITLAB_TOKEN` (access token with the `api` scope) in the project CI/CD variables to post the MR comment, or `GUACAMOLE_CI_COMMENT=false` to skip it.
 
 ### Skipping individual checks
 
