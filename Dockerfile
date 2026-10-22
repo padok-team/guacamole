@@ -36,7 +36,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a \
   -X ${PACKAGE}/internal/version.BuildTimestamp=${BUILD_TIMESTAMP}" \
   -o bin/guacamole main.go
 
-FROM docker.io/library/alpine:3.23.6@sha256:85fe1e81d6758c208f3e1eed4338a1997e19d4be002d4dd32d3100c9a8c010a0
+FROM docker.io/library/alpine:3.23.7@sha256:eaa20f3de212fa5cda0c64dc715b55ce28619928536d0d2a97ec1a922c1edce8
 
 WORKDIR /home/guacamole
 
