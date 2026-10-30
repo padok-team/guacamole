@@ -2,26 +2,22 @@ package checks
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
-	"github.com/gruntwork-io/terragrunt/config"
-	"github.com/gruntwork-io/terragrunt/options"
+	"github.com/gruntwork-io/terragrunt/pkg/config"
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/padok-team/guacamole/data"
 	"github.com/padok-team/guacamole/helpers"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/zclconf/go-cty/cty"
+	"github.com/zclconf/go-cty/cty/function"
+	"github.com/zclconf/go-cty/cty/function/stdlib"
 )
-
-type TerragruntLayerInputs struct {
-  Terraform *struct {
-    Source *string `hcl:"source,attr"`
-  } `hcl:"terraform,block"`
-
-  Inputs *cty.Value `hcl:"inputs,attr"`
-}
 
 func UnusedInputs() (data.Check, error) {
 	dataCheck := data.Check{
@@ -33,9 +29,7 @@ func UnusedInputs() (data.Check, error) {
 
 	codebasePath := viper.GetString("codebase-path")
 
-	terragruntOptions := options.NewTerragruntOptions()
-	// Get all layers
-	layers, err := config.FindConfigFilesInPath(codebasePath, terragruntOptions)
+	layers, err := findLayers(codebasePath)
 	if err != nil {
 		return dataCheck, err
 	}
@@ -43,44 +37,38 @@ func UnusedInputs() (data.Check, error) {
 	errors := []data.Error{}
 
 	for _, layerPath := range layers {
-		source, inputs, err := resolveLayerSourceAndInputs(layerPath)
+		inputNames, err := resolveLayerInputNames(layerPath)
 		if err != nil {
-			return dataCheck, err
-		}
-
-		// Skip layers that don't point to a module or don't set any input.
-		//
-		// An empty (but non-nil) source happens when terraform.source is written
-		// with a Terragrunt function (get_repo_root(), find_in_parent_folders(), ...):
-		// gohcl.DecodeBody is called with a nil EvalContext, so the function call
-		// can't be evaluated, but the *string destination still gets allocated to ""
-		// before the "value must be known" decode error is raised. Without this
-		// guard, that "" would resolve to the layer's own directory in
-		// resolveTerraformModulePath, and every input would be wrongly flagged as
-		// undeclared.
-		if source == nil || *source == "" || len(inputs) == 0 {
+			log.Warnf("[TG_INP_001] skipping layer %s: %s", layerPath, err)
 			continue
 		}
 
-		if isRemoteTerraformSource(*source) {
+		// Terragrunt evaluates the source (includes, locals, get_repo_root(), ...).
+		source, err := resolveLayerSource(layerPath)
+		if err != nil {
+			log.Warnf("[TG_INP_001] skipping layer %s: failed to resolve terraform.source: %s", layerPath, err)
 			continue
 		}
 
-		modulePath := resolveTerraformModulePath(layerPath, *source)
+		// Only local sources can be read: skip registry, git::, tfr://, ... and layers without inputs.
+		if len(inputNames) == 0 || !(strings.HasPrefix(source, "./") || strings.HasPrefix(source, "../") || filepath.IsAbs(source)) {
+			continue
+		}
 
+		modulePath := source
+		if !filepath.IsAbs(modulePath) {
+			modulePath = filepath.Join(filepath.Dir(layerPath), source)
+		}
+
+		// An unreadable module must not abort the run (and the other checks with it).
 		module, err := helpers.LoadModule(modulePath)
 		if err != nil {
-			return dataCheck, fmt.Errorf("failed to load module %q from layer %q: %w", modulePath, layerPath, err)
+			log.Warnf("[TG_INP_001] skipping layer %s: failed to load module %q: %s", layerPath, modulePath, err)
+			continue
 		}
 
-		declaredVariables := map[string]bool{}
-
-		for name := range module.ModuleConfig.Variables {
-			declaredVariables[name] = true
-		}
-
-		for inputName := range inputs {
-			if declaredVariables[inputName] {
+		for _, inputName := range inputNames {
+			if _, declared := module.ModuleConfig.Variables[inputName]; declared {
 				continue
 			}
 
@@ -105,81 +93,43 @@ func UnusedInputs() (data.Check, error) {
 	return dataCheck, nil
 }
 
-// resolveLayerSourceAndInputs resolves a Terragrunt layer the way Terragrunt
-// itself composes it: it follows the layer's include blocks and merges every
-// file that makes up the layer. This matters because most codebases use the
-// "context pattern", where the terraform{} block and the inputs live in
-// separate included files (module.hcl, inputs.hcl, ...) rather than directly in
-// the layer's terragrunt.hcl. Parsing terragrunt.hcl in isolation would find
-// neither, and the check would silently pass for every layer.
-//
-// It returns the resolved module source (if any) and the union of the input
-// names declared across all of the layer's files.
-func resolveLayerSourceAndInputs(layerPath string) (*string, map[string]cty.Value, error) {
-	// Discover every file that composes the layer: the terragrunt.hcl plus all
-	// of its processed includes. findFilesInLayers is shared with the Dry check.
-	files, err := findFilesInLayers(layerPath)
-	if err != nil {
-		return nil, nil, err
+func resolveLayerSource(layerPath string) (string, error) {
+	layerConfig, err := partialParseLayer(layerPath, config.TerraformSource)
+	if err != nil || layerConfig.Terraform == nil || layerConfig.Terraform.Source == nil {
+		return "", err
 	}
 
-	parser := hclparse.NewParser()
+	return *layerConfig.Terraform.Source, nil
+}
 
-	var source *string
-	inputs := map[string]cty.Value{}
+// resolveLayerInputNames returns the inputs set by the layer and its includes (context pattern).
+func resolveLayerInputNames(layerPath string) ([]string, error) {
+	files, err := findFilesInLayers(layerPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// merge() is the only function supported, the other ones make the inputs unreadable.
+	evalContext := &hcl.EvalContext{Functions: map[string]function.Function{"merge": stdlib.MergeFunc}}
+	parser := hclparse.NewParser()
+	names := map[string]bool{}
 
 	for _, file := range files {
 		hclFile, diags := parser.ParseHCLFile(file)
 		if diags.HasErrors() {
-			return nil, nil, diags
+			return nil, diags
 		}
 
-		var layerConfig TerragruntLayerInputs
-		// Each file only defines a subset of the layer (include/locals/dependency
-		// blocks live elsewhere), so we deliberately ignore the strict-decoding
-		// diagnostics and merge whatever terraform.source / inputs each file sets.
-		_ = gohcl.DecodeBody(hclFile.Body, nil, &layerConfig)
+		// Decoding errors are expected (locals, dependencies, ...): the keys are still decoded.
+		var input Input
+		_ = gohcl.DecodeBody(hclFile.Body, evalContext, &input)
 
-		if layerConfig.Terraform != nil && layerConfig.Terraform.Source != nil {
-			source = layerConfig.Terraform.Source
-		}
-
-		if layerConfig.Inputs != nil {
-			value := *layerConfig.Inputs
-			if value.Type().IsObjectType() || value.Type().IsMapType() {
-				for name, v := range value.AsValueMap() {
-					inputs[name] = v
-				}
+		if input.Inputs != nil && input.Inputs.IsKnown() && (input.Inputs.Type().IsObjectType() || input.Inputs.Type().IsMapType()) {
+			for name := range input.Inputs.AsValueMap() {
+				names[name] = true
 			}
 		}
 	}
 
-	return source, inputs, nil
-}
-
-func resolveTerraformModulePath(layerPath string, source string) string {
-	if filepath.IsAbs(source) {
-		return filepath.Clean(source)
-	}
-
-	return filepath.Clean(filepath.Join(filepath.Dir(layerPath), source))
-}
-
-func isRemoteTerraformSource(source string) bool {
-	remotePrefixes := []string{
-		"git::",
-		"github.com/",
-		"git@",
-		"https://",
-		"http://",
-		"tfr://",
-	}
-
-	for _, prefix := range remotePrefixes {
-		if strings.HasPrefix(source, prefix) {
-			return true
-		}
-	}
-
-	return false
+	return slices.Sorted(maps.Keys(names)), nil
 }
