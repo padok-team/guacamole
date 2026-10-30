@@ -3,6 +3,10 @@ package checks
 import (
 	"sync"
 
+	"github.com/padok-team/guacamole/checks/profile"
+	"github.com/padok-team/guacamole/checks/state"
+	"github.com/padok-team/guacamole/checks/static/tf"
+	"github.com/padok-team/guacamole/checks/static/tg"
 	"github.com/padok-team/guacamole/data"
 )
 
@@ -21,12 +25,12 @@ func All(layers []*data.Layer) []data.Check {
 
 	go func() {
 		defer wg.Done()
-		c <- StateChecks(layers)
+		c <- state.StateChecks(layers)
 	}()
 
 	go func() {
 		defer wg.Done()
-		c <- ModuleStaticChecks()
+		c <- tf.ModuleStaticChecks()
 	}()
 
 	wg.Wait()
@@ -36,4 +40,20 @@ func All(layers []*data.Layer) []data.Check {
 	}
 
 	return checkResults
+}
+
+func ModuleStaticChecks() []data.Check {
+	return tf.ModuleStaticChecks()
+}
+
+func LayerStaticChecks() []data.Check {
+	return tg.LayerStaticChecks()
+}
+
+func StateChecks(layers []*data.Layer) []data.Check {
+	return state.StateChecks(layers)
+}
+
+func Profile(codebase data.Codebase, verbose bool) {
+	profile.Profile(codebase, verbose)
 }
