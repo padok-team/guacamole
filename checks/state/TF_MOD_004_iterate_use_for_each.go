@@ -1,4 +1,4 @@
-package checks
+package state
 
 import (
 	"encoding/json"
