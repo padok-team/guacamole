@@ -1,4 +1,4 @@
-package checks
+package tf
 
 import (
 	"github.com/padok-team/guacamole/data"
