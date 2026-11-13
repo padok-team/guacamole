@@ -36,9 +36,12 @@ tests/
     │   ├── app/                    # inputs spread across files, no duplicate
     │   ├── tg_inp_001_declared_inputs/        # every input is declared in the module
     │   ├── tg_inp_001_registry_source/        # remote source: layer skipped
-    │   └── tg_inp_001_missing_local_module/   # unreadable module: layer skipped, run goes on
+    │   ├── tg_inp_001_missing_local_module/   # unreadable module: layer skipped, run goes on
+    │   ├── tg_dry_002_local_read_by_layers/   # literal local read by two layers below its file
+    │   └── tg_dry_002_reused_and_complex/     # local reused + local that merges values
     └── fail/
         ├── app/                    # `region` duplicated across included files
+        ├── tg_dry_002_single_use_literal/         # literal local used once
         ├── tg_inp_001_undeclared_input/           # `unknown_input` not declared in the module
         └── tg_inp_001_undeclared_input_in_merge/  # same, given through `merge()`
 ```
@@ -55,13 +58,13 @@ Layer checks can be run from any directory, including the repo root.
 guacamole static module -p /tests/modules/pass    # expect: all ✅ (100%)
 guacamole static module -p /tests/modules/fail -v # expect: every check ❌
 guacamole static layer  -p /tests/layers/pass     # expect: all ✅ (100%)
-guacamole static layer  -p /tests/layers/fail     # expect: TG_DRY_001 ❌ + TG_INP_001 ❌
+guacamole static layer  -p /tests/layers/fail     # expect: TG_DRY_001 ❌ + TG_DRY_002 ❌ + TG_INP_001 ❌
 
 # Option B — run the local binary from anywhere:
 guacamole static module -p /path/to/guacamole/tests/modules/pass   # expect: all ✅ (100%)
 guacamole static module -p /path/to/guacamole/tests/modules/fail   # expect: every check ❌
 guacamole static layer  -p /path/to/guacamole/tests/layers/pass    # expect: all ✅ (100%)
-guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_DRY_001 ❌ + TG_INP_001 ❌
+guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_DRY_001 ❌ + TG_DRY_002 ❌ + TG_INP_001 ❌
 
 # Add -v to see, for each failing check, the exact fixture path that triggered it.
 ```
@@ -83,6 +86,7 @@ guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_
 | `TF_OUT_001` | An output should contain a description                             | `tf_out_001_missing_description`         |
 | `TF_DAT_001` | A data source should not depend on a value computed during apply   | `tf_dat_001_datasource_computed`         |
 | `TG_DRY_001` | No duplicate inputs within a layer                                 | `layers/fail/app`                        |
+| `TG_DRY_002` | A local should be reused (DRY) or abstract complexity              | `layers/fail/tg_dry_002_single_use_literal` |
 | `TG_INP_001` | Terragrunt inputs should be declared as variables in the module    | `layers/fail/tg_inp_001_undeclared_input` |
 
 ### TG_INP_001 notes
@@ -95,6 +99,14 @@ guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_
 - Known limitation: inputs that are not an object literal (e.g.
   `yamldecode(file(...))`, `local.x`, or a `merge()` containing one) are not read,
   so nothing is reported.
+
+### TG_DRY_002 notes
+
+- A local counts as reused when it is referenced more than once, in its own file
+  (`local.x`) or from the files below it (`<alias>.locals.x`, e.g. through
+  `read_terragrunt_config()`): see `tg_dry_002_local_read_by_layers`.
+- A local also stays valid when its value abstracts complexity (function call or
+  several references): see `tg_dry_002_reused_and_complex`.
 
 ### Not covered here
 
