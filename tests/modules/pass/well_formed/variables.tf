@@ -16,3 +16,28 @@ variable "subnets" {
   type        = list(string)
   default     = []
 }
+
+# "whitelist" already denotes a collection (TF_NAM_004).
+variable "mongo_ip_whitelist" {
+  description = "The allowed MongoDB IP addresses"
+  type        = list(string)
+  default     = []
+}
+
+variable "mongo_ip_allowlist" {
+  description = "The allowed MongoDB IP addresses"
+  type        = set(string)
+  default     = []
+}
+
+variable "mongo_ip_denylist" {
+  description = "The denied MongoDB IP addresses"
+  type        = map(string)
+  default     = {}
+}
+
+variable "mongo_ip_blacklist" {
+  description = "The denied MongoDB IP addresses"
+  type        = list(string)
+  default     = []
+}
