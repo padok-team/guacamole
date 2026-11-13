@@ -1,4 +1,4 @@
-package checks
+package tg
 
 import (
 	"context"
