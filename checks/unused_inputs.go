@@ -23,7 +23,7 @@ func UnusedInputs() (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TG_INP_001",
 		Name:              "Terragrunt inputs should match variables declared in the called module",
-		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/remove_unused_variables.html",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terragrunt/unused_inputs.html",
 		Status:            "✅",
 	}
 
