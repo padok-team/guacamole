@@ -42,6 +42,7 @@ tests/
     └── fail/
         ├── app/                    # `region` duplicated across included files
         ├── tg_dry_002_single_use_literal/         # literal local used once
+        ├── tg_dry_002_local_read_once/            # literal local of shared.hcl read by one layer only
         ├── tg_inp_001_undeclared_input/           # `unknown_input` not declared in the module
         └── tg_inp_001_undeclared_input_in_merge/  # same, given through `merge()`
 ```
@@ -105,6 +106,10 @@ guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_
 - A local counts as reused when it is referenced more than once, in its own file
   (`local.x`) or from the files below it (`<alias>.locals.x`, e.g. through
   `read_terragrunt_config()`): see `tg_dry_002_local_read_by_layers`.
+- Pair to compare: `pass/tg_dry_002_local_read_by_layers` and
+  `fail/tg_dry_002_local_read_once` have the same `shared.hcl` (`owner = "team-a"`).
+  It is read by two layers (`dev`, `prod`) in the `pass` one, so it is reused;
+  by `dev` only in the `fail` one, so it is reported.
 - A local also stays valid when its value abstracts complexity (function call or
   several references): see `tg_dry_002_reused_and_complex`.
 
