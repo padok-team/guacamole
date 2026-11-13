@@ -26,7 +26,7 @@ func LocalIsUseful() (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TG_DRY_002",
 		Name:              "A local should only be defined if it is reused (DRY) or abstracts complexity",
-		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terragrunt/local_usage.html",
 		Status:            "✅",
 	}
 
