@@ -27,10 +27,8 @@ func Dry() (data.Check, error) {
 		Status:            "✅",
 	}
 	codebasePath := viper.GetString("codebase-path")
-	// Default options
-	options := options.NewTerragruntOptions()
 	// Get all layers
-	layers, err := config.FindConfigFilesInPath(codebasePath, options)
+	layers, err := findLayers(codebasePath)
 	if err != nil {
 		fmt.Println("Couldn't find files on codebase-path, is it a terragrunt repo root ?")
 		fmt.Println(err)
@@ -67,18 +65,26 @@ func Dry() (data.Check, error) {
 	return dataCheck, nil
 }
 
-func findFilesInLayers(path string) ([]string, error) {
-	files := []string{}
+// partialParseLayer lets Terragrunt partially parse a layer (locals, functions, includes) plus the given sections.
+func partialParseLayer(path string, decode ...config.PartialDecodeSectionType) (*config.TerragruntConfig, error) {
+	// Terragrunt functions like get_path_to_repo_root() need an absolute path.
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
 	// Create new terragrunt option scoped to the file we are scanning
 	options, _ := options.NewTerragruntOptionsWithConfigPath(path)
 	options.OriginalTerragruntConfigPath = path
-	// Parse the file with PartialParseConfigFile which parse all essential block, in our case local and include
-	// https://github.com/gruntwork-io/terragrunt/blob/master/pkg/config/config_partial.go
 	formatter := format.NewFormatter(format.NewKeyValueFormatPlaceholders())
 	formatter.SetDisabledColors(true)
 	logger := log.New(log.WithFormatter(formatter))
 	ctx, configContext := config.NewParsingContext(context.Background(), logger, options)
-	terragruntConfig, err := config.PartialParseConfigFile(ctx, configContext, logger, path, nil)
+	return config.PartialParseConfigFile(ctx, configContext.WithDecodeList(decode...), logger, path, nil)
+}
+
+func findFilesInLayers(path string) ([]string, error) {
+	files := []string{}
+	terragruntConfig, err := partialParseLayer(path)
 	if err != nil {
 		fmt.Println("Error parsing file", err.Error())
 		return files, err

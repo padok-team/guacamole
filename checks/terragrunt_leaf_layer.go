@@ -23,32 +23,18 @@ func TerragruntLeafLayer() (data.Check, error) {
 	codebasePath := viper.GetString("codebase-path")
 	layersInError := []data.Error{}
 
-	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("failed to scan codebase path: %w", err)
-		}
-
-		if info.IsDir() {
-			if terragruntCacheRegexp.MatchString(path) {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		if !isLayerRoot(info, path) {
-			return nil
-		}
-
-		errors, walkErr := findBelowLayers(filepath.Dir(path))
-		if walkErr != nil {
-			return walkErr
-		}
-		layersInError = append(layersInError, errors...)
-
-		return nil
-	})
+	layers, err := findLayers(codebasePath)
 	if err != nil {
 		return dataCheck, err
+	}
+
+	for _, layer := range layers {
+		errors, err := findBelowLayers(filepath.Dir(layer))
+		if err != nil {
+			return dataCheck, err
+		}
+
+		layersInError = append(layersInError, errors...)
 	}
 
 	dataCheck.Errors = layersInError
@@ -57,11 +43,6 @@ func TerragruntLeafLayer() (data.Check, error) {
 	}
 
 	return dataCheck, nil
-}
-
-// Reports whether the given file is a terragrunt.hcl defining a layer, ignoring the ones nested in terragrunt/terraform cache directories.
-func isLayerRoot(info os.FileInfo, path string) bool {
-	return info.Name() == "terragrunt.hcl" && !terragruntCacheRegexp.MatchString(path)
 }
 
 // Walks a layer directory and returns an error for every inputs.hcl found in a sub-directory, meaning another layer lives below.
@@ -92,4 +73,31 @@ func findBelowLayers(layerPath string) ([]data.Error, error) {
 	})
 
 	return errors, walkErr
+}
+
+// findLayers returns every terragrunt.hcl under the codebase path, from any working directory.
+func findLayers(codebasePath string) ([]string, error) {
+	layers := []string{}
+
+	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to scan codebase path: %w", err)
+		}
+
+		if terragruntCacheRegexp.MatchString(path) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+
+			return nil
+		}
+
+		if info.Name() == "terragrunt.hcl" {
+			layers = append(layers, path)
+		}
+
+		return nil
+	})
+
+	return layers, err
 }

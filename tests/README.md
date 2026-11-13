@@ -31,40 +31,37 @@ tests/
 │       └── tf_dat_001_datasource_computed/
 └── layers/                         # Terragrunt layers -> `guacamole static layer`
     ├── root.hcl                    # shared parent config (find_in_parent_folders)
-    ├── pass/app/                   # inputs spread across files, no duplicate
-    └── fail/app/                   # `region` duplicated across included files
+    ├── modules/bucket/             # local module called by the TG_INP_001 fixtures
+    ├── pass/
+    │   ├── app/                    # inputs spread across files, no duplicate
+    │   ├── tg_inp_001_declared_inputs/        # every input is declared in the module
+    │   ├── tg_inp_001_registry_source/        # remote source: layer skipped
+    │   └── tg_inp_001_missing_local_module/   # unreadable module: layer skipped, run goes on
+    └── fail/
+        ├── app/                    # `region` duplicated across included files
+        ├── tg_inp_001_undeclared_input/           # `unknown_input` not declared in the module
+        └── tg_inp_001_undeclared_input_in_merge/  # same, given through `merge()`
 ```
 
 ## How to run
 
-> ⚠️ **Run Guacamole from a directory that is _not_ a parent of these fixtures**
-> (e.g. from `/tmp`, using an absolute `-p`, or inside the Docker test image).
-> Terragrunt's layer discovery treats any path located under the current working
-> directory as its download dir and silently skips it, so
-> `guacamole static layer` finds **0 layers** when you run it from the repo root
-> against `./tests`. This only affects local runs from the repo; in real usage
-> the scanned codebase is a separate directory.
->
-> The easiest way to avoid this is to run the fixtures inside the Docker test
-> image, where they are baked in at `/tests` and the working directory is
-> unrelated. See [`scripts/docker-test-version.sh`](../scripts/docker-test-version.sh)
-> and its [README](../scripts/README.md).
+Layer checks can be run from any directory, including the repo root.
 
 ```bash
-# Option A — run inside the Docker test image (fixtures baked in at /tests):
+# Option A — run inside the Docker test image (fixtures baked in at /tests,
+# see scripts/docker-test-version.sh):
 ./scripts/docker-test-version.sh
 # then, inside the container:
 guacamole static module -p /tests/modules/pass    # expect: all ✅ (100%)
 guacamole static module -p /tests/modules/fail -v # expect: every check ❌
-guacamole static layer  -p /tests/layers/pass     # expect: TG_DRY_001 ✅
-guacamole static layer  -p /tests/layers/fail     # expect: TG_DRY_001 ❌
+guacamole static layer  -p /tests/layers/pass     # expect: all ✅ (100%)
+guacamole static layer  -p /tests/layers/fail     # expect: TG_DRY_001 ❌ + TG_INP_001 ❌
 
-# Option B — run the local binary from a neutral CWD, using an absolute path:
-cd /tmp
+# Option B — run the local binary from anywhere:
 guacamole static module -p /path/to/guacamole/tests/modules/pass   # expect: all ✅ (100%)
 guacamole static module -p /path/to/guacamole/tests/modules/fail   # expect: every check ❌
-guacamole static layer  -p /path/to/guacamole/tests/layers/pass    # expect: TG_DRY_001 ✅
-guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_DRY_001 ❌
+guacamole static layer  -p /path/to/guacamole/tests/layers/pass    # expect: all ✅ (100%)
+guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_DRY_001 ❌ + TG_INP_001 ❌
 
 # Add -v to see, for each failing check, the exact fixture path that triggered it.
 ```
@@ -85,7 +82,19 @@ guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_
 | `TF_VAR_002` | A variable should declare a specific type (not `any`)              | `tf_var_002_type_any`                    |
 | `TF_OUT_001` | An output should contain a description                             | `tf_out_001_missing_description`         |
 | `TF_DAT_001` | A data source should not depend on a value computed during apply   | `tf_dat_001_datasource_computed`         |
-| `TG_DRY_001` | No duplicate inputs within a layer                                 | `layers/fail`                            |
+| `TG_DRY_001` | No duplicate inputs within a layer                                 | `layers/fail/app`                        |
+| `TG_INP_001` | Terragrunt inputs should be declared as variables in the module    | `layers/fail/tg_inp_001_undeclared_input` |
+
+### TG_INP_001 notes
+
+- `terraform.source` is evaluated by Terragrunt: the `tg_inp_001_undeclared_input` /
+  `tg_inp_001_declared_inputs` pair builds it with `get_terragrunt_dir()` in an
+  included file, with inputs in another one (context pattern).
+- Only local sources are checked. Remote ones (`registry_source`) and unreadable
+  ones (`missing_local_module`) are skipped, with a warning for the latter.
+- Known limitation: inputs that are not an object literal (e.g.
+  `yamldecode(file(...))`, `local.x`, or a `merge()` containing one) are not read,
+  so nothing is reported.
 
 ### Not covered here
 
