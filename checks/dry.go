@@ -3,6 +3,7 @@ package checks
 import (
 	"context"
 	"fmt"
+	"io"
 	"maps"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/padok-team/guacamole/data"
 	"github.com/padok-team/guacamole/helpers"
+	logrus "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -38,7 +40,11 @@ func Dry() (data.Check, error) {
 	duplicates := []data.Error{}
 	for _, layer := range layers {
 		// Get all files that are included with Terragrunt include block
-		files, _ := findFilesInLayers(layer)
+		files, err := findFilesInLayers(layer)
+		if err != nil {
+			logrus.Warnf("[TG_DRY_001] skipping layer %s: %s", layer, err)
+			continue
+		}
 		// If there is more that 1 file, aka if we at least include 1 othe file
 		if len(files) > 1 {
 			// Get every 2 combination of file possible
@@ -51,7 +57,7 @@ func Dry() (data.Check, error) {
 					duplicates = append(duplicates, data.Error{
 						Path:        combination[0] + " and " + combination[1],
 						LineNumber:  -1,
-						Description: key + ":" + f,
+						Description: fmt.Sprintf("input %q has the same value %q in both files", key, f),
 					})
 				}
 			}
@@ -77,7 +83,7 @@ func partialParseLayer(path string, decode ...config.PartialDecodeSectionType) (
 	options.OriginalTerragruntConfigPath = path
 	formatter := format.NewFormatter(format.NewKeyValueFormatPlaceholders())
 	formatter.SetDisabledColors(true)
-	logger := log.New(log.WithFormatter(formatter))
+	logger := log.New(log.WithFormatter(formatter), log.WithOutput(io.Discard)) // errors are returned, not printed
 	ctx, configContext := config.NewParsingContext(context.Background(), logger, options)
 	return config.PartialParseConfigFile(ctx, configContext.WithDecodeList(decode...), logger, path, nil)
 }
@@ -86,7 +92,6 @@ func findFilesInLayers(path string) ([]string, error) {
 	files := []string{}
 	terragruntConfig, err := partialParseLayer(path)
 	if err != nil {
-		fmt.Println("Error parsing file", err.Error())
 		return files, err
 	}
 	// Add initial terragrunt.hcl file
