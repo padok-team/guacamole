@@ -3,8 +3,11 @@ package checks
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -15,13 +18,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// LocalIsUseful checks that every local defined in a .hcl file is actually
-// worth being a local. A local is only justified if:
-//   - it is reused (referenced more than once in the file) -> DRY, or
-//   - it abstracts complexity (its value merges several inputs).
-//
-// A local that is used at most once and whose value is a plain literal or a
-// simple alias should be inlined instead of being declared as a local.
+// LocalIsUseful checks that every local of a .hcl file is justified: it is reused
+// (DRY) or it abstracts complexity. Otherwise its value should be inlined.
 func LocalIsUseful() (data.Check, error) {
 	dataCheck := data.Check{
 		ID:                "TG_DRY_002",
@@ -30,177 +28,156 @@ func LocalIsUseful() (data.Check, error) {
 		Status:            "✅",
 	}
 
-	codebasePath := viper.GetString("codebase-path")
-	errorsFound := []data.Error{}
-
-	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("failed to scan codebase path: %w", err)
-		}
-
-		if info.IsDir() {
-			if terragruntCacheRegexp.MatchString(path) {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		if filepath.Ext(path) != ".hcl" || terragruntCacheRegexp.MatchString(path) {
-			return nil
-		}
-
-		log.Debugf("[TG_DRY_002] scanning %s", path)
-		fileErrors, checkErr := checkLocalsInFile(path)
-		if checkErr != nil {
-			log.Warnf("[TG_DRY_002] skipping %s: %s", path, checkErr)
-			return nil
-		}
-		errorsFound = append(errorsFound, fileErrors...)
-
-		return nil
-	})
+	paths, err := findFiles(viper.GetString("codebase-path"), func(name string) bool { return filepath.Ext(name) == ".hcl" })
 	if err != nil {
 		return dataCheck, err
 	}
 
-	dataCheck.Errors = errorsFound
-	if len(errorsFound) > 0 {
+	files := []*hclLocalsFile{}
+	for _, path := range paths {
+		file, err := scanLocalsInFile(path)
+		if err != nil {
+			log.Warnf("[TG_DRY_002] skipping %s: %s", path, err)
+		} else if file != nil {
+			files = append(files, file)
+		}
+	}
+
+	for _, file := range files {
+		dataCheck.Errors = append(dataCheck.Errors, file.uselessLocals(files)...)
+	}
+
+	if len(dataCheck.Errors) > 0 {
 		dataCheck.Status = "❌"
 	}
 
 	return dataCheck, nil
 }
 
-type localDefinition struct {
-	name  string
-	expr  hclsyntax.Expression
-	block hcl.Range
+// hclLocalsFile holds the locals defined by a .hcl file and the locals it references.
+type hclLocalsFile struct {
+	path string
+	defs []*hclsyntax.Attribute
+	// refs counts the `local.<name>` references, externalRefs the `<alias>.locals.<name>` ones.
+	refs, externalRefs map[string]int
 }
 
-// checkLocalsInFile parses a single .hcl file and returns an error for every
-// local that is neither reused nor abstracting complexity.
-func checkLocalsInFile(path string) ([]data.Error, error) {
+// scanLocalsInFile returns nil when the file neither defines nor reads any local.
+func scanLocalsInFile(path string) (*hclLocalsFile, error) {
 	src, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read %s: %w", path, err)
+		return nil, err
 	}
 
-	// Skip files with no locals block without paying the cost of a full HCL parse.
+	// Cheap filter: avoid parsing files that cannot contain a local.
 	if !bytes.Contains(src, []byte("locals")) {
-		log.Debugf("[TG_DRY_002] no locals keyword in %s, skipping", path)
 		return nil, nil
 	}
 
-	parser := hclparse.NewParser()
-	file, diags := parser.ParseHCL(src, path)
+	hclFile, diags := hclparse.NewParser().ParseHCL(src, path)
 	if diags.HasErrors() {
-		return nil, fmt.Errorf("failed to parse %s: %s", path, diags.Error())
+		return nil, diags
 	}
 
-	body, ok := file.Body.(*hclsyntax.Body)
-	if !ok {
-		return nil, nil
-	}
+	body := hclFile.Body.(*hclsyntax.Body)
+	file := &hclLocalsFile{path: path, refs: map[string]int{}, externalRefs: map[string]int{}}
 
-	// A file can hold several `locals` blocks, gather every declared local.
-	localDefs := []localDefinition{}
 	for _, block := range body.Blocks {
-		if block.Type != "locals" {
-			continue
-		}
-		for name, attr := range block.Body.Attributes {
-			localDefs = append(localDefs, localDefinition{
-				name:  name,
-				expr:  attr.Expr,
-				block: attr.SrcRange,
-			})
+		if block.Type == "locals" {
+			file.defs = slices.AppendSeq(file.defs, maps.Values(block.Body.Attributes))
 		}
 	}
+	// Map iteration is random: keep the report stable.
+	slices.SortFunc(file.defs, func(a, b *hclsyntax.Attribute) int { return a.SrcRange.Start.Line - b.SrcRange.Start.Line })
 
-	if len(localDefs) == 0 {
-		log.Debugf("[TG_DRY_002] no locals in %s, skipping", path)
-		return nil, nil
-	}
-	log.Debugf("[TG_DRY_002] found %d local(s) in %s", len(localDefs), path)
-
-	// Count how many times each local is referenced across the whole file.
-	usage := map[string]int{}
-	countLocalReferences(body, usage)
-
-	fileErrors := []data.Error{}
-	for _, def := range localDefs {
-		reused := usage[def.name] > 1
-		abstractsComplexity := mergesMultipleInputs(def.expr)
-
-		log.Debugf("[TG_DRY_002] local %q: used=%d reused=%v abstractsComplexity=%v", def.name, usage[def.name], reused, abstractsComplexity)
-
-		if reused || abstractsComplexity {
-			continue
-		}
-
-		fileErrors = append(fileErrors, data.Error{
-			Path:       path,
-			LineNumber: def.block.Start.Line,
-			Description: fmt.Sprintf(
-				"local \"%s\" is used %d time(s) and does not abstract complexity: inline its value instead of defining a local",
-				def.name, usage[def.name],
-			),
-		})
-	}
-
-	return fileErrors, nil
-}
-
-// countLocalReferences walks every attribute of the body (recursively into
-// nested blocks) and counts the `local.<name>` traversals it references.
-func countLocalReferences(body *hclsyntax.Body, usage map[string]int) {
-	for _, attr := range body.Attributes {
-		for _, traversal := range attr.Expr.Variables() {
-			if traversal.RootName() != "local" || len(traversal) < 2 {
-				continue
+	hclsyntax.VisitAll(body, func(node hclsyntax.Node) hcl.Diagnostics {
+		switch expr := node.(type) {
+		case *hclsyntax.ScopeTraversalExpr: // local.x, include.root.locals.x
+			steps := attrSteps(expr.Traversal[1:])
+			if expr.Traversal.RootName() == "local" && len(steps) > 0 {
+				file.refs[steps[0]]++
 			}
-			if step, ok := traversal[1].(hcl.TraverseAttr); ok {
-				usage[step.Name]++
-			}
-		}
-	}
-	for _, block := range body.Blocks {
-		countLocalReferences(block.Body, usage)
-	}
-}
-
-// mergesMultipleInputs reports whether a local's value abstracts complexity,
-// i.e. it combines several inputs. This is true when the expression either
-// references more than one distinct traversal or calls a function (merge,
-// concat, format, ...).
-func mergesMultipleInputs(expr hclsyntax.Expression) bool {
-	distinct := map[string]struct{}{}
-	for _, traversal := range expr.Variables() {
-		distinct[traversalKey(traversal)] = struct{}{}
-	}
-	if len(distinct) > 1 {
-		return true
-	}
-
-	hasFunctionCall := false
-	hclsyntax.VisitAll(expr, func(node hclsyntax.Node) hcl.Diagnostics {
-		if _, ok := node.(*hclsyntax.FunctionCallExpr); ok {
-			hasFunctionCall = true
+			file.countExternalRef(steps)
+		case *hclsyntax.RelativeTraversalExpr: // read_terragrunt_config("root.hcl").locals.x
+			file.countExternalRef(attrSteps(expr.Traversal))
 		}
 		return nil
 	})
 
-	return hasFunctionCall
+	return file, nil
 }
 
-// traversalKey builds a stable key identifying a traversal (e.g. "local.env.region")
-// so distinct references can be de-duplicated.
-func traversalKey(traversal hcl.Traversal) string {
-	key := traversal.RootName()
-	for _, step := range traversal[1:] {
-		if attrStep, ok := step.(hcl.TraverseAttr); ok {
-			key += "." + attrStep.Name
+// countExternalRef counts the local read after a "locals" step.
+func (f *hclLocalsFile) countExternalRef(steps []string) {
+	if i := slices.Index(steps, "locals"); i >= 0 && i+1 < len(steps) {
+		f.externalRefs[steps[i+1]]++
+	}
+}
+
+// uselessLocals returns an error for every local that is neither reused nor complex.
+func (f *hclLocalsFile) uselessLocals(all []*hclLocalsFile) []data.Error {
+	errs := []data.Error{}
+
+	for _, def := range f.defs {
+		used := f.refs[def.Name] + f.externalUsage(def.Name, all)
+		if used > 1 || abstractsComplexity(def.Expr) {
+			continue
+		}
+
+		errs = append(errs, data.Error{
+			Path:       f.path,
+			LineNumber: def.SrcRange.Start.Line,
+			Description: fmt.Sprintf(
+				"local \"%s\" is used %d time(s) and does not abstract complexity: inline its value instead of defining a local",
+				def.Name, used,
+			),
+		})
+	}
+
+	return errs
+}
+
+// externalUsage counts the reads of the local in the other files below this one (children read their parents).
+// ponytail: matched by name only, a same-named local read elsewhere below can hide an unused one.
+func (f *hclLocalsFile) externalUsage(name string, all []*hclLocalsFile) int {
+	total := 0
+
+	for _, other := range all {
+		if rel, err := filepath.Rel(filepath.Dir(f.path), other.path); other != f && err == nil && !strings.HasPrefix(rel, "..") {
+			total += other.externalRefs[name]
 		}
 	}
-	return key
+
+	return total
+}
+
+// attrSteps returns the names of the leading attribute steps of a traversal.
+func attrSteps(traversal hcl.Traversal) []string {
+	steps := []string{}
+	for _, step := range traversal {
+		attr, ok := step.(hcl.TraverseAttr)
+		if !ok {
+			break
+		}
+		steps = append(steps, attr.Name)
+	}
+
+	return steps
+}
+
+// abstractsComplexity reports whether the value combines several references or calls a function.
+func abstractsComplexity(expr hclsyntax.Expression) bool {
+	distinct := map[string]bool{}
+	for _, traversal := range expr.Variables() {
+		distinct[traversal.RootName()+"."+strings.Join(attrSteps(traversal[1:]), ".")] = true
+	}
+
+	hasFunctionCall := false
+	hclsyntax.VisitAll(expr, func(node hclsyntax.Node) hcl.Diagnostics {
+		_, isCall := node.(*hclsyntax.FunctionCallExpr)
+		hasFunctionCall = hasFunctionCall || isCall
+		return nil
+	})
+
+	return len(distinct) > 1 || hasFunctionCall
 }
