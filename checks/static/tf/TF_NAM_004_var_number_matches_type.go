@@ -11,10 +11,16 @@ import (
 )
 
 var pluralEquivalentWords = []string{
+	"list",
+	"set",
+	"map",
+	"array",
 	"whitelist",
 	"allowlist",
+	"safelist",
 	"denylist",
 	"blacklist",
+	"blocklist",
 }
 
 func VarNumberMatchesType(modules map[string]data.TerraformModule) (data.Check, error) {

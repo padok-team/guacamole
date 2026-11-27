@@ -41,3 +41,9 @@ variable "mongo_ip_blacklist" {
   type        = list(string)
   default     = []
 }
+
+variable "subnet_map" {
+  description = "Subnet CIDRs by name"
+  type        = map(string)
+  default     = {}
+}
