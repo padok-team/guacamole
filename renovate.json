@@ -6,6 +6,11 @@
 
   "platformAutomerge": false,
   "automergeType": "pr",
+  "rebaseWhen": "behind-base-branch",
+
+  "vulnerabilityAlerts": {
+    "groupName": "security updates"
+  },
 
   "packageRules": [
     {
