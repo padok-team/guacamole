@@ -24,6 +24,24 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Install Terraform and Terragrunt
+        run: |
+          TERRAFORM_VERSION=$(awk '$1 == "terraform" {print $2}' .tool-versions)
+          TERRAGRUNT_VERSION=$(awk '$1 == "terragrunt" {print $2}' .tool-versions)
+          CLI_DIR="${RUNNER_TEMP}/iac-cli"
+          mkdir -p "$CLI_DIR"
+          curl --fail --silent --show-error --location \
+            "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
+            -o "${CLI_DIR}/terraform.zip"
+          unzip -o "${CLI_DIR}/terraform.zip" -d "$CLI_DIR"
+          curl --fail --silent --show-error --location \
+            "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64" \
+            -o "${CLI_DIR}/terragrunt"
+          chmod +x "${CLI_DIR}/terragrunt"
+          echo "$CLI_DIR" >> "$GITHUB_PATH"
+          "${CLI_DIR}/terraform" version
+          "${CLI_DIR}/terragrunt" --version
+
       - name: Build guacamole
         run: go build -o "${RUNNER_TEMP}/guacamole" .
 

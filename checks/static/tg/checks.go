@@ -4,8 +4,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/gruntwork-io/terragrunt/pkg/log"
 	"github.com/padok-team/guacamole/data"
+	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/exp/slices"
 )
@@ -17,6 +17,7 @@ func LayerStaticChecks() []data.Check {
 		"TerragruntLeafLayer": TerragruntLeafLayer,
 		"LocalIsUseful":       LocalIsUseful,
 		"UnusedInputs":        UnusedInputs,
+		"CodeQualityTg":       CodeQualityTg,
 	}
 
 	var checkResults []data.Check
@@ -27,17 +28,18 @@ func LayerStaticChecks() []data.Check {
 	c := make(chan data.Check, len(checks))
 	defer close(c)
 
-	for _, checkFunction := range checks {
-		go func(checkFunction func() (data.Check, error)) {
+	for name, checkFunction := range checks {
+		go func(name string, checkFunction func() (data.Check, error)) {
 			defer wg.Done()
-
+			log.Debugf("[ %s ] Running", name)
 			check, err := checkFunction()
 			if err != nil {
-				log.Error(err)
+				log.Errorf("[ %s ] Failed: %v", name, err)
 				os.Exit(1)
 			}
+			log.Debugf("[ %s ] status=%s, errors=%d", name, check.Status, len(check.Errors))
 			c <- check
-		}(checkFunction)
+		}(name, checkFunction)
 	}
 
 	wg.Wait()

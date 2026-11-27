@@ -26,6 +26,7 @@ func ModuleStaticChecks() []data.Check {
 		"ResourceNamingThisThese":                  ResourceNamingThisThese,
 		"ResourceNaming":                           ResourceNaming,
 		"DataSourceComputedDependency":             DataSourceComputedDependency,
+		"CodeQualityTf":                            CodeQualityTf,
 	}
 
 	var checkResults []data.Check
@@ -42,28 +43,30 @@ func ModuleStaticChecks() []data.Check {
 	c := make(chan data.Check, len(checks))
 	defer close(c)
 
-	for _, checkFunction := range checks {
-		go func(checkFunction func(m map[string]data.TerraformModule) (data.Check, error)) {
+	for name, checkFunction := range checks {
+		go func(name string, checkFunction func(m map[string]data.TerraformModule) (data.Check, error)) {
 			defer wg.Done()
+			log.Debugf("[ %s ] Running", name)
 			check, err := checkFunction(modules)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("[ %s ] Failed: %v", name, err)
 				os.Exit(1)
 			}
+			log.Debugf("[ %s ] status=%s, errors=%d", name, check.Status, len(check.Errors))
 			// Apply ignore on Terraform code blocks checks errors
 			// This only cover Terraform resources that have a POS attribute
 			for i := len(check.Errors) - 1; i >= 0; i-- {
-				log.Debugf("Processing ignore for check %s (error index: %d)", check.ID, i)
+				log.Debugf("   [ %s ] Processing ignore (error index: %d)", check.ID, i)
 				originalCheck := check
 				check, _ = helpers.ApplyIgnoreOnCodeBlock(check, i, modules)
 				if len(originalCheck.Errors) > len(check.Errors) {
-					log.Debugf("Check %s was ignored by code block rule", check.ID)
+					log.Debugf("   [ %s ] Ignored by code block rule", check.ID)
 				}
 
 				originalCheck = check
 				check, _ = helpers.ApplyIgnoreOnModule(check, i, modules)
 				if len(originalCheck.Errors) > len(check.Errors) {
-					log.Debugf("Check %s was ignored by module rule", check.ID)
+					log.Debugf("   [ %s ] Ignored by module rule", check.ID)
 				}
 			}
 			// Replace the check error status with the array after ignoreing
@@ -71,7 +74,7 @@ func ModuleStaticChecks() []data.Check {
 				check.Status = "✅"
 			}
 			c <- check
-		}(checkFunction)
+		}(name, checkFunction)
 	}
 
 	wg.Wait()

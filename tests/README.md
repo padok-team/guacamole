@@ -122,7 +122,8 @@ fixtures.
 
 ### On pull requests
 
-The [`iac-score`](../.github/workflows/iac-score.yaml) workflow builds
+The [`iac-score`](../.github/workflows/iac-score.yaml) workflow installs Terraform
+and Terragrunt using the versions in [`.tool-versions`](../.tool-versions), builds
 Guacamole from the pull request and runs `guacamole ci` on every fixture of this
 folder. The result is posted as a PR comment: each `fail/` fixture should show
 its single ❌ and each `pass/` fixture 100%. When adding a check, add its
