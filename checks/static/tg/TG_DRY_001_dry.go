@@ -78,13 +78,30 @@ func partialParseLayer(path string, decode ...config.PartialDecodeSectionType) (
 	if err != nil {
 		return nil, err
 	}
-	// Create new terragrunt option scoped to the file we are scanning
-	options, _ := options.NewTerragruntOptionsWithConfigPath(path)
-	options.OriginalTerragruntConfigPath = path
+	opts, err := options.NewTerragruntOptionsWithConfigPath(path)
+	if err != nil {
+		return nil, err
+	}
 	formatter := format.NewFormatter(format.NewKeyValueFormatPlaceholders())
 	formatter.SetDisabledColors(true)
 	logger := log.New(log.WithFormatter(formatter), log.WithOutput(io.Discard)) // errors are returned, not printed
-	ctx, configContext := config.NewParsingContext(context.Background(), logger, options)
+	ctx, configContext := config.NewParsingContext(context.Background(), logger, config.WithStrictControls(opts.StrictControls))
+	configContext.TerragruntConfigPath = opts.TerragruntConfigPath
+	configContext.OriginalTerragruntConfigPath = path
+	configContext.WorkingDir = opts.WorkingDir
+	configContext.RootWorkingDir = opts.RootWorkingDir
+	configContext.DownloadDir = opts.DownloadDir
+	configContext.TFPath = opts.TFPath
+	configContext.AutoInit = opts.AutoInit
+	configContext.SourceMap = opts.SourceMap
+	configContext.MaxFoldersToCheck = opts.MaxFoldersToCheck
+	configContext.TofuImplementation = opts.TofuImplementation
+	configContext.ProviderCacheOptions = opts.ProviderCacheOptions
+	configContext.FeatureFlags = opts.FeatureFlags
+	configContext.Experiments = opts.Experiments
+	configContext.Telemetry = opts.Telemetry
+	configContext.EngineOptions = opts.EngineOptions
+	configContext.CASCloneDepth = opts.CASCloneDepth
 	return config.PartialParseConfigFile(ctx, configContext.WithDecodeList(decode...), logger, path, nil)
 }
 
