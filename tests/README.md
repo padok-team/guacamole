@@ -76,7 +76,7 @@ guacamole static layer  -p /path/to/guacamole/tests/layers/fail    # expect: TG_
 | `TF_NAM_001` | Unique-type resource should be named `this` / `these`              | `tf_nam_001_resource_not_this`           |
 | `TF_NAM_002` | `snake_case` should be used for all resource names                 | `tf_nam_002_not_snake_case`              |
 | `TF_NAM_003` | No stuttering between a resource name and its type                 | `tf_nam_003_stuttering`                  |
-| `TF_NAM_004` | A collection-typed variable should have a plural name              | `tf_nam_004_var_number_mismatch`         |
+| `TF_NAM_004` | A collection-typed variable should have a plural name or collection-equivalent word | `tf_nam_004_var_number_mismatch` |
 | `TF_NAM_005` | Several resources of a type must not be named `this` / `these`     | `tf_nam_005_multiple_named_this`         |
 | `TF_VAR_001` | A variable should contain a description                            | `tf_var_001_missing_description`         |
 | `TF_VAR_002` | A variable should declare a specific type (not `any`)              | `tf_var_002_type_any`                    |
