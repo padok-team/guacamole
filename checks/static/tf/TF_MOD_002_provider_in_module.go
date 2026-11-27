@@ -7,10 +7,10 @@ import (
 )
 
 func ProviderInModule(modules map[string]data.TerraformModule) (data.Check, error) {
-dataCheck := data.Check{
+	dataCheck := data.Check{
 		ID:                "TF_MOD_002",
 		Name:              "Provider should be defined by the consumer of the module",
-		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#setting-up-a-provider-in-a-module",
 		Status:            "✅",
 	}
 
