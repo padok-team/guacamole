@@ -77,7 +77,12 @@ func findBelowLayers(layerPath string) ([]data.Error, error) {
 
 // findLayers returns every terragrunt.hcl under the codebase path, from any working directory.
 func findLayers(codebasePath string) ([]string, error) {
-	layers := []string{}
+	return findFiles(codebasePath, func(name string) bool { return name == "terragrunt.hcl" })
+}
+
+// findFiles returns the files of the codebase whose name matches, skipping the terragrunt/terraform caches.
+func findFiles(codebasePath string, match func(name string) bool) ([]string, error) {
+	files := []string{}
 
 	err := filepath.Walk(codebasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -92,12 +97,12 @@ func findLayers(codebasePath string) ([]string, error) {
 			return nil
 		}
 
-		if info.Name() == "terragrunt.hcl" {
-			layers = append(layers, path)
+		if match(info.Name()) {
+			files = append(files, path)
 		}
 
 		return nil
 	})
 
-	return layers, err
+	return files, err
 }
