@@ -4,8 +4,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/gruntwork-io/terragrunt/pkg/log"
 	"github.com/padok-team/guacamole/data"
+	log "github.com/sirupsen/logrus"
 
 	"golang.org/x/exp/slices"
 )
