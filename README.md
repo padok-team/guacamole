@@ -247,23 +247,26 @@ You can specify the path of the `.guacamoleignore` file with the `-w` flag.
 ### Static module check for Terraform
 
 - `TF_MOD_001` - [Remote module call should be pinned to a specific version](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html#module-layer-versioning)
-- `TF_MOD_002` - [Provider should be defined by the consumer of the module](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-provider-block-in-modules)
+- `TF_MOD_002` - [Provider should be defined by the consumer of the module](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#setting-up-a-provider-in-a-module)
 - `TF_MOD_003` - [Required provider versions in modules should be set with ~> operator](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_versioning.html#required-providers-version-for-modules)
 - `TF_NAM_001` - [Resources in modules should be named "this" or "these" if their type is unique](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
 - `TF_NAM_002` - [snake_case should be used for all resource names](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
 - `TF_NAM_003` - [Stuttering in the naming of resources](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
 - `TF_NAM_004` - [Variable name's number should match its type](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables)
 - `TF_NAM_005` - [Resources and data sources should not be named \"this\" or \"these\" if there are more than 1 of the same type](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#resource-andor-data-source-naming)
-- `TF_VAR_001` - [Variable should contain a description](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#variables)
+- `TF_VAR_001` - [Variable should contain a description](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#variables)
+- `TF_OUT_001` - [Output should contain a description](https://padok-team.github.io/docs-terraform-guidelines/terraform/terraform_naming.html#module-outputs)
 - `TF_VAR_002` - [Variable should declare a specific type](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#using-type-any-in-variables)
 - `TF_DAT_001` - [Data source should not depend on a value computed during apply](https://padok-team.github.io/docs-terraform-guidelines/terraform/donts.html#data-sources-depending-on-values-only-known-at-apply-time)
+- `TF_QUA_001` - [Terraform code should be properly formatted using `terraform fmt`](https://padok-team.github.io/docs-terraform-guidelines/tooling/#code-quality)
 
 ### Static layer check for Terragrunt
 
-- `TG_DRY_001` - [No duplicate inputs within a layer](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html#%EF%B8%8F-context)
+- `TG_DRY_001` - [No duplicate inputs within a layer](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html#-rules-to-respect)
 - `TG_DRY_002` - [A local should only be defined if it is reused (DRY) or abstracts complexity](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/local_usage.html)
-- `TG_ARC_001` - [terragrunt.hcl should be the last layer to apply](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html)
+- `TG_ARC_001` - [terragrunt.hcl should be the last file in the layer](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/context_pattern.html)
 - `TG_INP_001` - [Terragrunt inputs should match variables declared in the called module](https://padok-team.github.io/docs-terraform-guidelines/terragrunt/unused_inputs.html)
+- `TG_QUA_001` - [Terragrunt code should be properly formatted using `terragrunt hcl format`](https://padok-team.github.io/docs-terraform-guidelines/tooling/#code-quality)
 
 ### State
 

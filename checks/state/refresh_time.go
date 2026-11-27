@@ -10,7 +10,7 @@ func RefreshTime(layers []*data.Layer) (data.Check, error) {
 	checkResult := data.Check{
 		Name:              "Layers' refresh time",
 		Status:            "✅",
-		RelatedGuidelines: "https://github.com/padok-team/docs-terraform-guidelines/blob/main/terraform/wysiwg_patterns.md",
+		RelatedGuidelines: "https://padok-team.github.io/docs-terraform-guidelines/terraform/wysiwg_patterns.html",
 		Errors:            []data.Error{},
 	}
 
